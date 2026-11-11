@@ -1,0 +1,25 @@
+*.iml
+.gradle/
+.android-sdk/
+local.properties
+**/build/
+.idea/
+*.jks
+*.keystore
+artifacts/
+.kotlin/
+release-signing.properties
+*.hprof
+__pycache__/
+*.pyc
+
+# Arsip workspace dan draft distribusi toko, bukan source publik aktif.
+docs/releases/
+docs/store/
+docs/screenshots/camera-*.png
+docs/screenshots/editor-*.png
+*.apk
+*.aab
+*.idsig
+.env
+.env.*

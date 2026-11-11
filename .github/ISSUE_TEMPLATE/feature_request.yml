@@ -1,0 +1,11 @@
+name: Usulan fitur
+description: Jelaskan kebutuhan penggunaan dan fitur yang diusulkan.
+title: '[Fitur] '
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Kebutuhan
+      description: Masalah yang ingin diselesaikan dan contoh alurnya.
+    validations:
+      required: true

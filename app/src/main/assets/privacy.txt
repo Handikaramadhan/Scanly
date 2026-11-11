@@ -1,0 +1,25 @@
+Kebijakan Privasi Scanly — versi 1.7.0
+
+Scanly menyimpan PDF di penyimpanan internal aplikasi dan tidak memiliki server dokumen, akun, analitik buatan Scanly, atau SDK iklan. Scanly tidak mengunggah dokumen secara otomatis.
+
+Pemindaian memakai ML Kit Document Scanner milik Google, melalui Google Play services. Komponen scanner dapat diunduh pada pemakaian pertama; alur scan diproses di perangkat. Menurut dokumentasi Google, ML Kit juga dapat mengirim metrik penggunaan/kinerja serta informasi perangkat dan aplikasi ke Google, dan dapat menghubungi server untuk pembaruan komponen. Gambar masukan dan hasil pemindaian tidak dikirim ke server Google oleh ML Kit. Kemampuan offline bukan janji bahwa SDK tidak pernah mengakses jaringan ketika koneksi tersedia. Rincian: https://developers.google.com/ml-kit/android-data-disclosure.
+
+Google Play services adalah komponen pihak ketiga dengan ketentuan dan kebijakan Google sendiri: https://policies.google.com/privacy dan https://developers.google.com/ml-kit/terms.
+
+Setelah komponen siap, scan dan pengelolaan dokumen lokal dapat digunakan offline. Berbagi atau mengekspor ke layanan cloud mengikuti kebijakan aplikasi/lokasi yang Anda pilih.
+
+Backup otomatis dokumen dinonaktifkan. Hapus dokumen melalui menu Hapus. Menghapus aplikasi atau datanya dapat menghapus seluruh dokumen internal. Buat salinan melalui Ekspor salinan PDF sebelum menghapus aplikasi atau berpindah perangkat.
+
+Scanly juga menyimpan pilihan tema secara lokal. Pilihan ini tidak dikirim ke server Scanly. Pemrosesan metrik oleh Google mengikuti kebijakan Google yang ditautkan di atas.
+
+Draft foto privat dari versi kamera kustom sebelumnya tidak dihapus atau diunggah oleh pembaruan ini. PDF yang sudah disimpan tetap tersedia di lokasi aplikasi yang sama.
+
+Folder dan OCR: nama folder, keanggotaan dokumen dan hasil OCR disimpan di database privat aplikasi. Hasil OCR adalah teks turunan yang tidak menambahkan lapisan teks ke PDF asli. Pencarian isi hanya memakai hasil OCR yang sudah diproses. Model OCR huruf Latin disertakan di APK; tidak diperlukan unduhan model OCR terpisah. Scanner kamera Google tetap dapat membutuhkan unduhan awalnya sendiri.
+
+OCR memproses satu halaman PDF setiap kali di perangkat. Tidak ada unggahan dokumen atau hasil OCR ke server Scanly. SDK Google tetap mengikuti kebijakan metrik dan pembaruan Google yang disebutkan di atas. OCR berlangsung selama proses aplikasi tetap berjalan; bila aplikasi dihentikan sistem sebelum selesai, mulai ulang OCR dari menu dokumen.
+
+Menghapus folder tidak menghapus PDF. Menghapus PDF turut menghapus hasil OCR dan pengelompokannya. Ekspor PDF tidak menyertakan database folder/OCR; gunakan Ekspor TXT untuk salinan teks. Menyalin atau membagikan teks hanya dilakukan atas pilihan Anda, melalui clipboard atau aplikasi tujuan, yang memiliki kebijakan tersendiri. Hasil OCR harus diperiksa karena dapat keliru.
+
+Alat gambar/PDF dan tanda tangan: gambar yang dipilih serta coretan tanda tangan diproses lokal, tanpa unggahan ke server Scanly. Input dinormalisasi ke cache privat dan hanya dipakai untuk sesi alat. Cache dibersihkan ketika sesi ditutup normal, tetapi dapat tersisa setelah penghentian proses/sistem sampai dibersihkan Android. Tidak ada pustaka template tanda tangan yang disimpan permanen secara otomatis.
+
+Ekspor JPG/PNG/ZIP ditulis ke lokasi yang Anda pilih. Gambar ke PDF dan penambahan TTD membuat PDF baru di penyimpanan aplikasi; file sumber tidak ditimpa. TTD adalah gambar visual dan salinan PDF bertanda tangan dirender ulang; metadata OCR aplikasi tidak diwariskan ke salinan itu. Penyedia galeri/lokasi cloud atau aplikasi tujuan mengikuti kebijakannya sendiri.

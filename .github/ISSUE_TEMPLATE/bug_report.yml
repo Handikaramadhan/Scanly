@@ -1,0 +1,24 @@
+name: Laporan bug
+description: Laporkan masalah pada Scanly tanpa mengunggah dokumen pribadi.
+title: '[Bug] '
+labels: []
+body:
+  - type: input
+    id: device
+    attributes:
+      label: Perangkat dan Android
+      placeholder: Model HP, versi Android dan versi Scanly
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Cara memunculkan masalah
+      description: Tulis langkah, hasil yang muncul, dan hasil yang diharapkan.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Bukti tambahan
+      description: Gunakan contoh sintetis. Jangan unggah KTP, invoice pribadi, tanda tangan asli, atau kredensial.
