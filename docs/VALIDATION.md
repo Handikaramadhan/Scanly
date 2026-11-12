@@ -1,6 +1,6 @@
-# Validasi Scanly 1.7.0
+# Validasi Scanly 1.7.1
 
-Tanggal: 11 November 2026. versionCode 10. Perubahan: ekspor PDF ke JPG/PNG, gambar ke PDF dan TTD visual dari coretan/gambar dengan penghapus latar lokal. Scanner Google, folder dan OCR dipertahankan.
+Tanggal: 11 November 2026. versionCode 11. Perubahan rilis: identitas signing penerbit khusus, fingerprint dipatok dan paket publikasi. Fitur scanner Google, folder, OCR, gambar/PDF dan TTD mengikuti 1.7.0. Pemeriksaan versi ini dijalankan ulang setelah perubahan versionCode/name.
 
 ## Hasil lokal
 
@@ -45,11 +45,18 @@ Input dialog nama folder tetap diuji via operasi ViewModel/katalog karena kendal
 env JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 ./gradlew writeDependencyInventory --no-daemon --console=plain
 python3 scripts/generate_notices.py
 env JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 ./gradlew testDebugUnitTest lintDebug lintRelease assembleDebug assembleDebugAndroidTest assembleRelease bundleRelease --no-daemon --console=plain
-env JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 python3 scripts/package_artifacts.py --test-release
+env JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 python3 scripts/package_artifacts.py
+env JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 python3 scripts/sign_release.py --signing-properties /path/privat/signing.properties
 python3 scripts/package_source.py
 python3 scripts/write_checksums.py
 ```
 
-Identitas tetap com.scanly.app. Pemeriksa sertifikat membandingkan key uji dengan APK 1.0–1.6. Release-test optimized tidak debuggable tetapi memakai key uji, bukan key penerbit. APK/AAB unsigned tetap tersedia. Model OCR Latin, aset lisensi/privasi, izin, ZIP dan alignment diperiksa: ELF64 minimal 16 KB, ELF32 minimal 4 KB, zipalign -P 16; ini pemeriksaan binary, bukan runtime HP 16 KB.
+Identitas tetap com.scanly.app. APK distribusi Scanly-1.7.1.apk memakai kunci penerbit RSA-4096 yang berbeda dari APK uji; tidak debuggable dan fingerprint cocok dengan docs/release-certificate.sha256. APK/AAB unsigned tetap tersedia untuk build/signing terpisah. Migrasi instalasi uji memerlukan ekspor dokumen dan instal ulang; ini bukan update langsung. Model OCR Latin, aset lisensi/privasi, izin, ZIP dan alignment diperiksa: ELF64 minimal 16 KB, ELF32 minimal 4 KB, zipalign -P 16; ini pemeriksaan binary, bukan runtime HP 16 KB.
 
 Tidak ada izin kamera/mikrofon/penyimpanan luas baru; alat memakai pemilih foto/berkas Android dan Activity alat tidak exported. Detail binary, hash dan sertifikat ada di artifacts/validation-summary.json dan SHA256SUMS.txt. Persiapan publikasi/identitas penerbit mengikuti RELEASE_CHECKLIST.md.
+
+## Pemeriksaan signing 1.7.1
+
+Skrip sign_release.py mencocokkan hash APK unsigned dengan validation-summary.json sebelum signing, kemudian memverifikasi signature, fingerprint penerbit, package/version, flag debuggable dan zipalign. Laporan release-validation.json berisi hash APK akhir dan fingerprint publik; tidak berisi password atau lokasi kunci privat. Berkas privat tidak dimasukkan ke Git/source ZIP.
+
+Build 1.7.1 selesai sukses (148 task). Signing aktual lulus dengan sertifikat penerbit yang dipatok. Dua uji negatif juga lulus: fingerprint salah dan hash APK unsigned salah ditolak, tanpa menimpa APK keluaran yang sudah ada.

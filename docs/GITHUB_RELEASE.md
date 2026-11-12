@@ -1,42 +1,43 @@
-# Distribusi melalui GitHub
+# Rilis GitHub Scanly 1.7.1
 
-Repository: https://github.com/Handikaramadhan/Scanly
+Target distribusi saat ini GitHub; Play Store dikerjakan nanti. Rilis 1.7.0-rc1 sudah publik dengan APK uji. Rilis berikutnya menggunakan tag **v1.7.1**, judul **Scanly 1.7.1**, dan status rilis biasa sesuai keputusan pemilik.
 
-Git menyimpan source, lisensi, dokumentasi dan workflow. APK, ZIP source dan checksum didistribusikan sebagai **Release assets**, bukan dimasukkan ke riwayat Git. Tidak perlu akun Play Console untuk jalur ini; APK tetap perlu sertifikat signing yang konsisten agar Android menerima pembaruan.
+## Paket distribusi
 
-## Kandidat awal 1.7.0
+- `artifacts/Scanly-1.7.1.apk`: APK optimized, tidak debuggable, kunci penerbit khusus.
+- `artifacts/Scanly-1.7.1-source.zip`: source publik tanpa SDK/cache/key.
+- `artifacts/SHA256SUMS.txt`: checksum APK dan berkas pendamping.
+- `artifacts/release-validation.json`: identitas versi, checksum, sertifikat penerbit dan batas pengujian.
+- `artifacts/validation-summary.json`: hasil tes/lint/pemeriksaan binary.
 
-Berkas yang telah disiapkan lokal:
+Buka https://github.com/Handikaramadhan/Scanly/releases/new, pilih main dan tag v1.7.1. Salin docs/RELEASE_NOTES.md, lampirkan berkas di atas, lalu Publish release. Jangan centang Pre-release untuk jalur rilis biasa ini. Jangan mengganti APK pada tag 1.7.0-rc1: identitas kunci berubah dan harus dijelaskan sebagai rilis baru.
 
-- artifacts/Scanly-1.7.0-release-test.apk — kandidat optimized, key uji lokal yang sama dengan versi percobaan lama.
-- artifacts/Scanly-1.7.0-source.zip — source publik dengan allowlist, tanpa cache/SDK/key.
-- artifacts/SHA256SUMS.txt — checksum kandidat dan artefak pendamping.
-- artifacts/validation-summary.json — bukti tes/lint/pemeriksaan binary dan batasnya.
+Source sudah dapat di-push melalui SSH. Pembuatan Release dan pengunggahan asset memerlukan login web atau token API yang memiliki izin menulis release; SSH Git saja tidak menyediakan operasi tersebut. Tidak ada credential API penerbit yang ditanam dalam workflow.
 
-Kandidat ini bukan APK yang ditandatangani key produksi. Untuk percobaan publik, beri label **Pre-release** dan jelaskan batas uji perangkat. Sebelum distribusi stabil luas, pilih dan simpan key produksi privat; jangan mencampur APK dengan sertifikat berbeda sebagai jalur update yang sama. Jangan unggah keystore/password ke repository, issue, artifact atau log.
+## Kunci pembaruan
 
-## Membuat Release
+Kunci penerbit RSA-4096 dibuat khusus Scanly. Fingerprint publik dipatok di [release-certificate.sha256](release-certificate.sha256); skrip signing menolak kunci debug atau kunci penerbit yang tidak cocok. Kunci dan password privat berada di luar repository, dengan direktori 0700 dan file 0600. Pemilik perlu menyimpan backup privat keystore dan password secara terpisah; kehilangan kunci menghalangi update dengan identitas yang sama. Jangan unggah key/password ke GitHub, issue, artifact atau log.
 
-1. Buka https://github.com/Handikaramadhan/Scanly/releases/new dan pilih main sebagai target.
-2. Gunakan tag v1.7.0-rc1, judul Scanly 1.7.0 Preview, dan isi catatan dari RELEASE_NOTES.md.
-3. Lampirkan keempat berkas di atas. Jangan lampirkan keystore, release-signing.properties atau data scan.
-4. Tandai Pre-release. Cocokkan SHA256SUMS dengan berkas yang benar-benar diunggah. Publish ketika paket dan catatannya telah ditinjau.
-5. Sesudah asset publik tersedia, perbarui README dengan link APK aktual; jangan memasang link latest/download yang belum ada.
+Sebelum pindah dari APK uji, ekspor PDF/TXT dan periksa salinannya, baru uninstall lalu instal APK rilis. Uninstall menghapus data internal. Metadata folder/OCR tidak ikut ekspor PDF; belum ada restore library/impor PDF dalam aplikasi. Jangan menjanjikan update langsung dari APK uji.
 
-Untuk mengunggah melalui CLI yang sudah login:
+Saat nanti memakai Play App Signing, gunakan identitas app signing yang sama bila ingin update lintas GitHub/Play Store tetap kompatibel. Lihat https://developer.android.com/studio/publish/app-signing.
+
+## Build dan signing
+
+JDK 21, SDK 36, Build Tools 35.0.0, Python 3. Build pertama memerlukan internet.
 
 ```sh
-gh release create v1.7.0-rc1 --repo Handikaramadhan/Scanly --target main --prerelease --title 'Scanly 1.7.0 Preview' --notes-file docs/RELEASE_NOTES.md artifacts/Scanly-1.7.0-release-test.apk artifacts/Scanly-1.7.0-source.zip artifacts/SHA256SUMS.txt artifacts/validation-summary.json
+scripts/check.sh
+python3 scripts/package_artifacts.py --sdk /path/ke/sdk
+python3 scripts/sign_release.py --sdk /path/ke/sdk --signing-properties /path/privat/signing.properties
+python3 scripts/package_source.py
+python3 scripts/write_checksums.py
 ```
 
-Jalankan perintah dari root proyek setelah verifikasi SHA-256 dan review. Workflow CI tidak mempublikasikan rilis sendiri.
+Properties privat di luar repository: storeFile (path absolut keystore), storePassword, keyAlias, keyPassword. Keystore dan properties harus mode 0600. Jangan memakai release-signing.properties di root proyek untuk jalur ini: skrip signing bekerja dari APK unsigned yang hash-nya sudah diverifikasi. Password dilewatkan lewat environment subprocess, bukan argumen command atau laporan.
 
-## CI
+CI menjalankan tes/lint/build, menghasilkan artifact pemeriksaan dan tidak mempublikasikan APK pengguna. Kunci debug runner berbeda dari kunci penerbit.
 
-.github/workflows/android.yml menjalankan tes/lint/build JDK 21 + SDK 36, membangun kandidat unsigned/source dan mengunggah artifact pemeriksaan. Token job hanya membaca contents; credential checkout tidak dipertahankan. Tidak ada key signing rilis yang disertakan.
+## Bukti kualitas
 
-APK debug dari runner berbeda key dengan APK lokal dan bisa berubah antar-build. Artifact CI untuk pengujian/kajian, bukan jalur update pengguna. Gunakan key yang sama dan proses signing terpisah untuk APK distribusi.
-
-## Batas kandidat
-
-61 tes lokal lulus dan lint tanpa error pada paket lokal awal. Kamera Google, akurasi OCR, picker/renderer perangkat dan latar TTD nyata masih perlu uji HP. Penghapus latar paling cocok tinta di kertas. TTD berupa salinan PDF gambar; sumber tetap tersedia. Lihat DEVICE_TESTS.md.
+Lihat VALIDATION.md dan DEVICE_TESTS.md. Tes lokal dan pemeriksaan signing tidak menggantikan uji kamera/OCR/renderer pada HP. Pemilihan label rilis biasa tidak mengubah batas bukti pengujian.

@@ -1,3 +1,10 @@
+# 1.7.1
+
+- Kunci penerbit khusus RSA-4096 untuk jalur rilis GitHub dan pembaruan selanjutnya.
+- Signing terpisah dari build unsigned, fingerprint sertifikat dipatok, password tidak masuk argumen/log.
+- Paket distribusi Scanly-1.7.1.apk, checksum dan laporan signing; panduan transisi dari APK uji diperjelas.
+- versionCode 11; fitur scanner/editor Google, OCR, folder, gambar/PDF dan TTD dipertahankan.
+
 # 1.7.0
 
 - Konversi beberapa gambar ke PDF dengan pengaturan urutan, normalisasi EXIF dan dasar putih untuk gambar transparan.

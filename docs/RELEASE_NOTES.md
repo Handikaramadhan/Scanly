@@ -1,21 +1,31 @@
-## Scanly 1.7.0 Preview
+# Scanly 1.7.1
 
-Aplikasi Android untuk scan dan mengelola PDF, tanpa akun, iklan, langganan atau watermark.
+Aplikasi Android untuk scan dan mengelola dokumen, tanpa akun, iklan, langganan atau watermark. Distribusi melalui GitHub; Play Store menyusul.
 
-- Scanner dan editor Google dengan deteksi tepi/crop/filter.
-- Folder lokal, pencarian nama/hasil OCR, rename, bagikan dan ekspor.
-- OCR Latin lokal, salin/bagikan teks dan ekspor TXT.
-- Gambar ke PDF dengan pengaturan urutan; ekspor halaman PDF ke JPG/PNG atau ZIP.
-- Tanda tangan visual dari coretan/foto, pembersih latar tinta/kertas dan penempatan pada halaman pilihan.
+## Fitur
 
-### Pemasangan
+- Scanner dan editor Google dengan deteksi tepi, crop dan filter.
+- PDF beberapa halaman, folder, pencarian, rename, bagikan dan ekspor.
+- OCR Latin lokal untuk salin/bagikan teks dan ekspor TXT.
+- Gambar ke PDF dengan pengaturan urutan; PDF ke JPG/PNG atau ZIP.
+- Tanda tangan dari coretan/gambar, penghapus latar tinta/kertas dan penempatan pada halaman pilihan.
 
-Unduh Scanly-1.7.0-release-test.apk dan cocokkan SHA-256. Ini kandidat dengan key uji lokal, bukan key produksi. Pembaruan memerlukan package/sertifikat yang sama. Ekspor dokumen penting sebelum mengganti identitas instalasi.
+## Perubahan 1.7.1
 
-### Offline dan komponen
+Memulai jalur pembaruan dengan kunci penerbit khusus Scanly. APK optimized dan tidak debuggable; checksum dan bukti signing disertakan. Fitur aplikasi mengikuti 1.7.0.
 
-Scanner Google mungkin perlu mengunduh komponen saat pertama digunakan. Model OCR Latin ikut APK. Kode Scanly Apache-2.0; komponen Google memiliki ketentuannya sendiri dan dapat memakai jaringan untuk metrik/pembaruan sesuai kebijakannya.
+## Unduh dan pasang
 
-### Batas pengujian
+Unduh **Scanly-1.7.1.apk** dari Assets dan cocokkan checksum. Memerlukan Android 6.0+; scanner memerlukan Google Play services kompatibel dan RAM minimum 1,7 GB. Izinkan pemasangan dari browser/file manager jika Android meminta.
 
-61 tes lokal lulus, lint 0 error. Tes lokal memakai renderer/recognizer injeksi; akurasi dan alur native masih perlu diuji di HP. Penghapus latar paling cocok tinta di kertas terang. Salinan PDF bertanda tangan dirender ulang menjadi gambar sehingga lapisan interaktif tidak dipertahankan; PDF asli tetap utuh. Kandidat ini belum dinyatakan stabil untuk distribusi luas.
+**Pengguna APK uji 1.7.0 atau sebelumnya:** ekspor PDF penting dan TXT hasil OCR, pastikan salinannya dapat dibuka, baru uninstall APK lama lalu instal versi ini. Kunci baru berbeda sehingga tidak bisa update langsung. Uninstall menghapus seluruh data internal, folder dan OCR. Ekspor PDF tidak membawa metadata folder/OCR; belum ada pemulihan library atau impor PDF di aplikasi. Salinan PDF bisa dibuka lewat viewer/file manager. Update berikutnya pada jalur kunci penerbit yang sama dapat dipasang sebagai pembaruan.
+
+## Offline dan privasi
+
+Komponen scanner Google mungkin diunduh saat pertama digunakan; setelah siap, pemindaian/pengolahan lokal dapat berjalan offline. Model OCR Latin disertakan dalam APK. PDF disimpan di perangkat; ekspor sebelum uninstall/hapus data. Kode Scanly Apache-2.0; komponen Google memiliki lisensi dan kebijakan masing-masing.
+
+## Catatan penggunaan dan pengujian
+
+Penghapus latar paling cocok tinta gelap pada kertas terang. Tanda tangan berupa gambar visual; PDF hasil tanda tangan dirender ulang menjadi gambar dan PDF asli tetap tersimpan. Bukan tanda tangan digital bersertifikat.
+
+Tes/lint/build dan signing diperiksa; pengujian kamera Google, akurasi OCR serta alur perangkat untuk paket ini belum dijalankan oleh otomasi karena tidak ada HP terhubung. Laporkan masalah melalui Issues tanpa melampirkan dokumen atau tanda tangan pribadi.

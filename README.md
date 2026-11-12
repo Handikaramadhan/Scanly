@@ -1,14 +1,16 @@
-# Scanly 1.7.0
+# Scanly 1.7.1
 
 Pemindai dokumen Android gratis dengan kode aplikasi open source (Apache-2.0), tanpa akun, iklan, langganan atau watermark. Kamera, deteksi tepi, crop, filter dan editor kembali memakai **Google ML Kit Document Scanner**, dengan konfigurasi scanner penuh seperti versi awal. Komponen scanner Google sendiri tidak open source.
 
 ## Unduh dan pasang
 
-Source resmi: [Handikaramadhan/Scanly](https://github.com/Handikaramadhan/Scanly). Distribusi aplikasi ditujukan melalui **[GitHub Releases](https://github.com/Handikaramadhan/Scanly/releases)**. APK publik belum diterbitkan; jangan menganggap artifact CI sebagai rilis resmi.
+Source resmi: [Handikaramadhan/Scanly](https://github.com/Handikaramadhan/Scanly). APK dibagikan melalui **[GitHub Releases](https://github.com/Handikaramadhan/Scanly/releases)**. Rilis uji 1.7.0 sudah tersedia; paket 1.7.1 menggunakan kunci penerbit khusus dan menunggu pengunggahan sebagai rilis berikutnya.
 
-Untuk kandidat 1.7.0 yang disiapkan lokal, gunakan `Scanly-1.7.0-release-test.apk` dan cocokkan SHA-256 yang menyertainya. Kandidat memakai key uji yang sama dengan versi percobaan sebelumnya. Android dapat meminta izin memasang aplikasi dari browser/file manager yang dipakai. Pembaruan harus memakai package dan sertifikat yang sama; ekspor dokumen penting sebelum mengganti identitas instalasi.
+Untuk 1.7.1, pilih **Scanly-1.7.1.apk** dan cocokkan SHA-256 pada release tersebut. Android dapat meminta izin memasang aplikasi dari browser/file manager. Android minimum 6.0; scanner memerlukan Google Play services yang kompatibel dan perangkat dengan RAM minimum 1,7 GB.
 
-Panduan menerbitkan APK dan menjaga key pembaruan: [GitHub Releases](docs/GITHUB_RELEASE.md). Workflow Actions memvalidasi source dan menghasilkan artifact pengujian; key debug runner berbeda dari key lokal dan tidak boleh dipakai bergantian untuk pembaruan pengguna.
+**Pindah dari APK uji 1.7.0 atau versi sebelumnya:** ekspor semua PDF penting dan TXT hasil OCR terlebih dahulu ke penyimpanan di luar aplikasi. Buka hasil ekspor untuk memastikan salinannya utuh. Kunci penerbit baru berbeda dari kunci uji, sehingga APK baru tidak dapat memperbarui instalasi lama secara langsung. Setelah ekspor, uninstall APK uji lalu instal 1.7.1. Uninstall menghapus PDF internal, folder dan indeks OCR. Ekspor PDF tidak membawa metadata folder/OCR; aplikasi belum menyediakan pemulihan seluruh library atau impor PDF lama. Salinan PDF tetap dapat dibuka lewat file manager/viewer PDF.
+
+Update berikutnya dari jalur rilis 1.7.1 menggunakan package dan kunci penerbit yang sama. Jangan memakai APK debug dari Actions sebagai pembaruan. Panduan signing dan publikasi: [GitHub Releases](docs/GITHUB_RELEASE.md).
 
 ## Cara scan
 
@@ -54,13 +56,15 @@ Tarik ke bawah dari bagian atas Beranda/Dokumen untuk memuat ulang. Pencarian na
 
 ## Membangun dari source
 
-Gunakan `artifacts/Scanly-1.7.0-release-test.apk` sebagai kandidat uji yang dioptimasi, dengan signing key uji yang sama sehingga dapat diperbarui tanpa uninstall. APK ini bukan signing penerbit untuk toko. APK debug juga tersedia. Cocokkan checksum di `artifacts/SHA256SUMS.txt`. APK/AAB release unsigned belum siap dipasang/publikasi.
+APK distribusi 1.7.1 adalah `artifacts/Scanly-1.7.1.apk`: optimized, tidak debuggable, dan memakai kunci penerbit khusus. APK debug untuk diagnosis; APK/AAB unsigned perlu ditandatangani sebelum distribusi. Kunci privat tidak disertakan dalam source.
 
 Build: JDK 21, Android SDK 36, Build Tools 35.0.0, Python 3, minSdk 23. Build pertama memerlukan internet untuk dependency. Siapkan local.properties untuk SDK lokal.
 
 ```sh
 scripts/check.sh
-python3 scripts/package_artifacts.py --sdk /path/ke/sdk --test-release
+python3 scripts/package_artifacts.py --sdk /path/ke/sdk
+# Pemilik kunci penerbit saja; properties privat di luar repository:
+python3 scripts/sign_release.py --sdk /path/ke/sdk --signing-properties /path/privat/signing.properties
 python3 scripts/package_source.py
 python3 scripts/write_checksums.py
 ```

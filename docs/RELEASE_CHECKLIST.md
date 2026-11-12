@@ -1,41 +1,33 @@
-# Status persiapan rilis Scanly 1.7.0
+# Status rilis Scanly 1.7.1
 
-Kandidat untuk diuji, belum dipublikasikan. Package com.scanly.app, versionCode 10. Scanner Google tetap digunakan.
+Target: rilis biasa di GitHub, Play Store ditunda. Package com.scanly.app, versionCode 11. Fitur aplikasi mengikuti 1.7.0; kamera/editor Google dipertahankan.
 
-## Selesai di workspace
+## Distribusi dan identitas
 
-- [x] Gambar→PDF (urutan/EXIF), PDF→JPG/PNG/ZIP dan TTD visual dari gambar/coretan.
-- [x] Pembersih latar foto tinta/kertas, posisi/ukuran TTD dan salinan raster tanpa menimpa sumber.
+- [x] Source 1.7.0 dan APK uji telah dipublikasikan ke GitHub.
+- [x] Workflow GitHub untuk commit ae36eac selesai sukses.
+- [x] Pemilik memilih kunci penerbit khusus untuk jalur rilis selanjutnya.
+- [x] Kunci RSA-4096 dibuat privat di luar source; fingerprint publik dipatok.
+- [x] Jalur signing menolak kunci debug/perbedaan fingerprint dan memverifikasi hash APK unsigned.
+- [x] Panduan transisi dari APK uji menjelaskan ekspor, instal ulang dan hilangnya metadata internal.
+- [ ] APK 1.7.1/source/checksum/laporan diunggah ke Release v1.7.1.
+- [ ] Pemilik menyimpan backup privat keystore dan password di lokasi terpisah.
 
-- [x] Folder lokal: buat, rename, pindah dokumen dan hapus folder tanpa menghapus PDF.
-- [x] OCR Latin lokal: proses PDF per halaman, progres/pembatalan, simpan atomik dan pertahankan hasil lengkap saat gagal.
-- [x] Pencarian nama/hasil OCR dalam folder, pembaca teks, salin/bagikan dan ekspor TXT.
-- [x] PDF lama tetap di lokasi semula; jurnal memulihkan metadata jika rename terputus.
-- [x] 61 tes lokal lulus. Tes native PDF dan OCR disertakan serta dikompilasi.
-- [x] Privasi, lisensi, inventaris dependency, panduan perangkat dan listing diperbarui.
-- [x] Paket optimized test/debug/unsigned AAB, sertifikat pembaruan, model OCR dan alignment binary diverifikasi.
-- [x] ZIP source dan SHA256SUMS disertakan serta diperiksa integritasnya.
+- [x] Build 1.7.1, 61 tes, lint debug/release dan APK instrumentasi selesai sukses.
+- [x] APK penerbit ditandatangani dan diverifikasi; salah fingerprint/hash ditolak tanpa menimpa output.
+
+## Pemeriksaan versi ini
+
+Hasil final build/tes dan identitas APK dicatat di artifacts/validation-summary.json dan release-validation.json. Lihat VALIDATION.md. Paket bertanda tangan dan checksum disiapkan lokal sebelum publikasi; jangan menggantinya dengan APK debug runner CI.
 
 ## Bukti perangkat yang masih diperlukan
 
-- [ ] Konversi/ekspor via picker, tinta pada latar nyata, coretan/stylus, posisi TTD dan salinan PDF hasil di renderer HP.
+- [ ] Instal APK penerbit 1.7.1, buka scanner/editor dan simpan beberapa halaman.
+- [ ] Penyiapan scanner online lalu scan/crop/filter/tambah halaman dalam mode pesawat.
+- [ ] OCR native Indonesia/Inggris, beberapa halaman, teks kosong/buram, pembatalan dan proses dimatikan.
+- [ ] Konversi/ekspor picker, gambar EXIF, TTD foto/coretan dan penempatan pada PDF hasil.
+- [ ] Folder/rename/pencarian, TalkBack/font besar, copy/share/TXT, penyimpanan hampir penuh.
+- [ ] Pembaruan berikutnya memakai package/kunci penerbit yang sama tanpa kehilangan PDF.
+- [ ] HP dengan page size 16 KB bila tersedia; pemeriksaan ELF/ZIP bukan bukti runtime.
 
-- [ ] Update dari 1.5 tanpa uninstall dan pastikan PDF lama terbaca.
-- [ ] Scanner Google: penyiapan awal online, lalu scan/crop/filter/tambah halaman dalam mode pesawat.
-- [ ] OCR asli di HP: Indonesia/Inggris, beberapa halaman, foto buram/bayangan, hasil kosong, pembatalan dan proses dimatikan.
-- [ ] Keyboard/dialog nama folder dan rename, TalkBack/font besar, copy/share/TXT via pemilih berkas.
-- [ ] Kandidat optimized yang di-shrink diuji, termasuk native OCR dan HP 16 KB bila tersedia.
-
-ADB terakhir tidak mendeteksi perangkat terhubung. Tidak ada /dev/kvm untuk emulator berakselerasi. Tes lokal menyuntikkan hasil OCR dan memakai shadow PDFBox pada batas PdfRenderer; bukan bukti akurasi model native.
-
-## Distribusi GitHub
-
-- [x] Target repository publik: Handikaramadhan/Scanly.
-- [x] Source allowlist, README pemasangan, template issue dan workflow pemeriksaan disiapkan.
-- [x] APK lokal, catatan preview dan checksum tersedia untuk Release assets.
-- [ ] Unggah APK/ZIP/checksum ke GitHub Releases dan tandai Pre-release setelah review.
-- [ ] Tentukan key privat untuk jalur rilis stabil; kandidat lokal saat ini memakai key uji yang sama dengan instalasi sebelumnya.
-
-Play Store ditunda. Tidak ada kebutuhan akun Play Console atau form Data safety toko untuk mengunggah source/APK ke GitHub. Kebijakan privasi/ketentuan SDK tetap didokumentasikan. Workflow CI hanya membangun artifact pemeriksaan dan tidak mempublikasikan APK otomatis; key debug runner tidak menjadi identitas update pengguna.
-
-Lihat GITHUB_RELEASE.md untuk langkah membuat Release dan perbedaan kandidat uji versus signing stabil.
+ADB pada persiapan 1.7.1 tidak mendeteksi HP. Native PDF/OCR/konversi test APK dikompilasi, belum dieksekusi. Jangan menandai item perangkat selesai hanya karena tes lokal lulus atau label rilis diubah.
