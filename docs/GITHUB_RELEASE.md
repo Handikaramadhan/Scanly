@@ -1,16 +1,16 @@
-# Rilis GitHub Scanly 1.7.1
+# Rilis GitHub Scanly 1.8.0
 
-Target distribusi saat ini GitHub; Play Store dikerjakan nanti. Rilis 1.7.0-rc1 sudah publik dengan APK uji. Rilis berikutnya menggunakan tag **v1.7.1**, judul **Scanly 1.7.1**, dan status rilis biasa sesuai keputusan pemilik.
+Target distribusi saat ini GitHub; Play Store dikerjakan nanti. Rilis 1.7.1 sudah memakai kunci penerbit khusus; 1.8.0 melanjutkan identitas pembaruan yang sama. Rilis berikutnya menggunakan tag **v1.8.0**, judul **Scanly 1.8.0**, dan status rilis biasa sesuai keputusan pemilik.
 
 ## Paket distribusi
 
-- `artifacts/Scanly-1.7.1.apk`: APK optimized, tidak debuggable, kunci penerbit khusus.
-- `artifacts/Scanly-1.7.1-source.zip`: source publik tanpa SDK/cache/key.
+- `artifacts/Scanly-1.8.0.apk`: APK optimized, tidak debuggable, kunci penerbit khusus.
+- `artifacts/Scanly-1.8.0-source.zip`: source publik tanpa SDK/cache/key.
 - `artifacts/SHA256SUMS.txt`: checksum APK dan berkas pendamping.
 - `artifacts/release-validation.json`: identitas versi, checksum, sertifikat penerbit dan batas pengujian.
 - `artifacts/validation-summary.json`: hasil tes/lint/pemeriksaan binary.
 
-Buka https://github.com/Handikaramadhan/Scanly/releases/new, pilih main dan tag v1.7.1. Salin docs/RELEASE_NOTES.md, lampirkan berkas di atas, lalu Publish release. Jangan centang Pre-release untuk jalur rilis biasa ini. Jangan mengganti APK pada tag 1.7.0-rc1: identitas kunci berubah dan harus dijelaskan sebagai rilis baru.
+Buka https://github.com/Handikaramadhan/Scanly/releases/new, pilih main dan tag v1.8.0. Salin docs/RELEASE_NOTES.md, lampirkan berkas di atas, lalu Publish release. Jangan centang Pre-release untuk jalur rilis biasa ini. Jangan mengganti APK pada tag 1.7.0-rc1: identitas kunci berubah dan harus dijelaskan sebagai rilis baru.
 
 Source sudah dapat di-push melalui SSH. Pembuatan Release dan pengunggahan asset memerlukan login web atau token API yang memiliki izin menulis release; SSH Git saja tidak menyediakan operasi tersebut. Tidak ada credential API penerbit yang ditanam dalam workflow.
 

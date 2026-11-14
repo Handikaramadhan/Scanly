@@ -1,74 +1,87 @@
 package com.scanly.app.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.activity.compose.BackHandler
-import com.scanly.app.data.DocumentSort
-import java.text.Collator
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Sort
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.ui.semantics.CustomAccessibilityAction
-import androidx.compose.ui.semantics.customActions
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.platform.testTag
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.scanly.app.data.Document
-import com.scanly.app.tools.ToolMode
+import com.scanly.app.data.DocumentFolder
 import com.scanly.app.data.DocumentName
-import java.text.DateFormat
-import java.util.Date
+import com.scanly.app.data.DocumentSort
+import com.scanly.app.tools.ToolMode
+import java.text.Collator
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScanlyApp(model: HomeViewModel, onScan: (String?) -> Unit, onOpen: (Document) -> Unit,
-              onShare: (Document) -> Unit, onExport: (Document) -> Unit, onExportText: (Document) -> Unit = {},onTools: (ToolMode,Document?)->Unit = { _,_ -> }) {
+              onShare: (Document) -> Unit, onExport: (Document) -> Unit,
+              onExportText: (Document) -> Unit = {}, onTools: (ToolMode, Document?) -> Unit = { _, _ -> }) {
     val state by model.state.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
+    var tab by rememberSaveable { mutableIntStateOf(0) }
     var selectedFolder by rememberSaveable { mutableStateOf("*") }
+    var query by rememberSaveable { mutableStateOf("") }
+    var folderQuery by rememberSaveable { mutableStateOf("") }
     var folderEditor by rememberSaveable { mutableStateOf(false) }
     var editingFolderId by rememberSaveable { mutableStateOf<String?>(null) }
     var folderMenu by remember { mutableStateOf(false) }
     var deleteFolder by rememberSaveable { mutableStateOf<String?>(null) }
     var moveDocument by rememberSaveable { mutableStateOf<String?>(null) }
-    val refreshing = state.operationRunning && state.status == "Memuat dokumen…"
-    var tab by rememberSaveable { mutableIntStateOf(0) }
-    val requestScan={ onScan(if(tab==1) selectedFolder.takeUnless { it=="*" || it=="~" } else null) }
     var deleteId by rememberSaveable { mutableStateOf<String?>(null) }
-    var query by rememberSaveable { mutableStateOf("") }
     var renameId by rememberSaveable { mutableStateOf<String?>(null) }
     var renameText by rememberSaveable { mutableStateOf("") }
     var sortName by rememberSaveable { mutableStateOf(DocumentSort.NEWEST.name) }
     var sortMenu by remember { mutableStateOf(false) }
+    var toolPicker by rememberSaveable { mutableStateOf<String?>(null) }
+    val folderOpen = tab == 2 && selectedFolder != "*"
+    val folder = state.folders.find { it.id == selectedFolder }
+    val folderRoot = tab == 2 && !folderOpen
+    val activeQuery = if (folderOpen) folderQuery else if (tab == 1) query else ""
+    val refreshing = state.operationRunning && state.status == "Memuat dokumen…"
+    val requestScan = { onScan(if (folderOpen) folder?.id else null) }
     val sort = DocumentSort.valueOf(sortName)
     val collator = remember { Collator.getInstance(Locale.forLanguageTag("id-ID")) }
     val homeList = rememberLazyListState()
     val documentsList = rememberLazyListState()
-    BackHandler(enabled=tab!=0) { if(tab==1 && selectedFolder!="*") selectedFolder="*" else tab=0 }
-    LaunchedEffect(state.folders) { if(selectedFolder!="*" && selectedFolder!="~" && state.folders.none { it.id==selectedFolder }) selectedFolder="*" }
-    LaunchedEffect(query) { model.search(query) }
+    val foldersList = rememberLazyListState()
+    val folderDocumentsList = rememberLazyListState()
+    val closeFolder = { selectedFolder = "*"; folderQuery = "" }
+    BackHandler(enabled = toolPicker != null || tab != 0) {
+        if (toolPicker != null) toolPicker = null else if (folderOpen) closeFolder() else tab = 0
+    }
+    LaunchedEffect(state.folders, state.operationRunning) {
+        if (!state.operationRunning && selectedFolder != "*" && selectedFolder != "~" && folder == null) closeFolder()
+    }
+    LaunchedEffect(activeQuery) { model.search(activeQuery) }
     LaunchedEffect(query, sortName) { documentsList.scrollToItem(0) }
-    val matches = remember(state.documents,state.textMatches,query,sortName,selectedFolder) {
-        val filtered=state.documents.filter {
-            (selectedFolder=="*" || (selectedFolder=="~" && it.folderId==null) || it.folderId==selectedFolder) &&
-                (it.name.contains(query.trim(),ignoreCase=true) || it.id in state.textMatches)
+    LaunchedEffect(folderQuery, selectedFolder, sortName) { folderDocumentsList.scrollToItem(0) }
+    val matches = remember(state.documents, state.textMatches, state.searchQuery, activeQuery, sortName, tab, selectedFolder) {
+        val filtered = state.documents.filter {
+            (!folderOpen || (selectedFolder == "~" && it.folderId == null) || it.folderId == selectedFolder) &&
+                (it.name.contains(activeQuery.trim(), ignoreCase = true) ||
+                    (state.searchQuery == activeQuery.trim() && it.id in state.textMatches))
         }
         when (sort) {
             DocumentSort.NEWEST -> filtered.sortedWith(compareByDescending<Document> { it.modified }.thenBy { it.id })
@@ -78,28 +91,62 @@ fun ScanlyApp(model: HomeViewModel, onScan: (String?) -> Unit, onOpen: (Document
     }
     val snackbar = remember { SnackbarHostState() }
     LaunchedEffect(state.message) {
-        state.message?.let { snackbar.showSnackbar(it, withDismissAction = true, duration = SnackbarDuration.Long); model.dismissMessage(it) }
+        state.message?.let {
+            snackbar.showSnackbar(it, withDismissAction = true, duration = SnackbarDuration.Long)
+            model.dismissMessage(it)
+        }
     }
     Scaffold(
-        topBar = { TopAppBar(title = {
-            Text(when (tab) { 2 -> "Pengaturan"; 1 -> "Dokumen"; else -> "Scanly" }, fontWeight = FontWeight.Bold)
-        },actions={ IconButton(enabled=!state.busy,onClick={ onTools(ToolMode.IMAGES_TO_PDF,null) }) { Icon(Icons.Outlined.Collections,"Gambar ke PDF") } }) },
+        topBar = {
+            TopAppBar(title = {
+                Text(if (toolPicker != null) "Pilih PDF" else when (tab) {
+                    1 -> "Dokumen"
+                    2 -> if (folderOpen) folder?.name ?: "Tanpa folder" else "Folder"
+                    3 -> "Pengaturan"
+                    else -> "Scanly"
+                }, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
+            }, navigationIcon = {
+                if (toolPicker != null) IconButton(onClick = { toolPicker = null }) {
+                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Kembali ke Beranda")
+                } else if (folderOpen) IconButton(onClick = closeFolder) {
+                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Kembali ke folder")
+                }
+            }, actions = {
+                if (toolPicker == null && folderOpen && folder != null) Box {
+                    IconButton(enabled = !state.busy, onClick = { folderMenu = true }) {
+                        Icon(Icons.Outlined.MoreVert, "Opsi folder")
+                    }
+                    FolderMenu(folderMenu, { folderMenu = false }, {
+                        folderMenu = false; editingFolderId = selectedFolder; folderEditor = true
+                    }, { folderMenu = false; deleteFolder = selectedFolder })
+                }
+            })
+        },
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
             NavigationBar {
                 listOf("Beranda" to Icons.Outlined.Home, "Dokumen" to Icons.Outlined.Description,
-                    "Pengaturan" to Icons.Outlined.Settings).forEachIndexed { index, item ->
-                    NavigationBarItem(selected = tab == index, onClick = { tab = index },
-                        icon = { Icon(item.second, contentDescription = null) }, label = { Text(item.first) })
+                    "Folder" to Icons.Outlined.Folder, "Pengaturan" to Icons.Outlined.Settings).forEachIndexed { index, item ->
+                    NavigationBarItem(selected = tab == index, onClick = { focusManager.clearFocus(); toolPicker = null; tab = index },
+                        icon = { Icon(item.second, contentDescription = null) }, label = { Text(item.first, maxLines = 1, overflow = TextOverflow.Ellipsis) })
                 }
             }
         },
         floatingActionButton = {
-            if (tab != 2 && !state.busy) ExtendedFloatingActionButton(
-                onClick = requestScan, icon = { Icon(Icons.Outlined.DocumentScanner, null) }, text = { Text("Scan Dokumen") })
+            if (toolPicker == null && (tab == 1 || folderOpen) && !state.busy) ExtendedFloatingActionButton(
+                onClick = requestScan, icon = { Icon(Icons.Outlined.DocumentScanner, null) },
+                text = { Text("Scan Dokumen") })
         }
     ) { padding ->
-        if (tab == 2) SettingsScreen(state.theme, model::setTheme, Modifier.padding(padding))
+        if (toolPicker != null) {
+            val mode = ToolMode.valueOf(toolPicker!!)
+            ToolDocumentPicker(mode, state.documents, !state.busy,
+                modifier = Modifier.padding(padding), onDismiss = { toolPicker = null },
+                onPick = {
+                    if (toolPicker != null) { toolPicker = null; onTools(mode, it) }
+                },
+                onScan = { toolPicker = null; onScan(null) })
+        } else if (tab == 3) SettingsScreen(state.theme, model::setTheme, Modifier.padding(padding))
         else PullToRefreshBox(isRefreshing = refreshing,
             onRefresh = { if (!state.busy) model.refresh() },
             modifier = Modifier.fillMaxSize().padding(padding).testTag("document-refresh").semantics {
@@ -107,132 +154,124 @@ fun ScanlyApp(model: HomeViewModel, onScan: (String?) -> Unit, onOpen: (Document
                     if (!state.busy) { model.refresh(); true } else false
                 })
             }) {
-        LazyColumn(state = if (tab == 0) homeList else documentsList, modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 112.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            if (tab == 0) item {
-                Text("Dari kertas, jadi rapi.", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
-                Text("Scan dan simpan dokumen di perangkatmu.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(20.dp))
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
-                    Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Icon(Icons.Outlined.PhonelinkLock, contentDescription = null)
-                        Text("Dokumenmu, tetap milikmu.", style = MaterialTheme.typography.titleMedium)
-                        Text("Tanpa akun, iklan, atau watermark. Scanner Google, folder dan OCR lokal untuk dokumenmu.")
+            LazyColumn(
+                state = when { tab == 0 -> homeList; folderRoot -> foldersList; folderOpen -> folderDocumentsList; else -> documentsList },
+                modifier = Modifier.fillMaxSize().testTag(if (folderRoot) "folder-list" else "document-list"),
+                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp,
+                    bottom = if (tab == 1 || folderOpen) 104.dp else 24.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (tab == 0) {
+                    item {
+                        Text("Dari kertas, jadi rapi", style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold)
+                        Spacer(Modifier.height(8.dp))
+                        Text("Scan dan simpan dokumen di perangkatmu", style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(Modifier.height(20.dp))
+                        HomeTools(!state.busy, requestScan,
+                            { toolPicker = ToolMode.PDF_TO_IMAGES.name },
+                            { onTools(ToolMode.IMAGES_TO_PDF, null) },
+                            { toolPicker = ToolMode.SIGN_PDF.name })
+                        Spacer(Modifier.height(20.dp))
+                        HorizontalDivider()
                     }
-                }
-            }
-            item {
-                Text(if(tab==0) "Dokumen terbaru" else when(selectedFolder) {
-                    "*" -> "Semua dokumen (${state.documents.size})"
-                    "~" -> "Tanpa folder"
-                    else -> state.folders.find { it.id==selectedFolder }?.name ?: "Dokumen"
-                },
-                    style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-            }
-            if(tab==1) item {
-                Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
-                    Text("Folder",Modifier.weight(1f),style=MaterialTheme.typography.titleMedium)
-                    IconButton(enabled=!state.busy,onClick={ editingFolderId=null;folderEditor=true }) { Icon(Icons.Outlined.CreateNewFolder,"Buat folder") }
-                    Box {
-                        IconButton(enabled=!state.busy && state.folders.any { it.id==selectedFolder },onClick={ folderMenu=true }) { Icon(Icons.Outlined.MoreVert,"Opsi folder") }
-                        DropdownMenu(expanded=folderMenu,onDismissRequest={ folderMenu=false }) {
-                            DropdownMenuItem(text={ Text("Ubah nama folder") },onClick={ folderMenu=false;editingFolderId=selectedFolder;folderEditor=true })
-                            DropdownMenuItem(text={ Text("Hapus folder") },onClick={ folderMenu=false;deleteFolder=selectedFolder })
+                    item {
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Text("Dokumen Baru", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold)
+                            if (state.documents.isNotEmpty()) TextButton(onClick = { tab = 1 }) { Text("Lihat semua") }
                         }
                     }
                 }
-                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected=selectedFolder=="*",onClick={ selectedFolder="*" },label={ Text("Semua") })
-                    FilterChip(selected=selectedFolder=="~",onClick={ selectedFolder="~" },label={ Text("Tanpa folder") })
-                    state.folders.forEach { folder -> FilterChip(selected=selectedFolder==folder.id,onClick={ selectedFolder=folder.id },label={ Text(folder.name) }) }
-                }
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = query, onValueChange = { query = it },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
-                    modifier = Modifier.fillMaxWidth(), singleLine = true,
-                    label = { Text("Cari nama atau isi dokumen") },
-                    leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                    trailingIcon = {
-                        if (query.isNotEmpty()) IconButton(onClick = { query = "" }) {
-                            Icon(Icons.Outlined.Close, contentDescription = "Hapus pencarian")
-                        }
-                    },
-                    supportingText = { Text("Pencarian isi tersedia setelah Baca teks (OCR).") }
-                )
-                if(state.searching) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top=8.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Text("${matches.size} dokumen", style = MaterialTheme.typography.labelLarge)
-                    Box {
-                        TextButton(onClick = { sortMenu = true }) {
-                            Icon(Icons.AutoMirrored.Outlined.Sort, contentDescription = null)
-                            Spacer(Modifier.width(8.dp))
-                            Text(sort.label)
-                        }
-                        DropdownMenu(expanded = sortMenu, onDismissRequest = { sortMenu = false }) {
-                            DocumentSort.entries.forEach { option ->
-                                DropdownMenuItem(text = { Text(option.label) }, onClick = {
-                                    sortName = option.name; sortMenu = false
-                                }, leadingIcon = { if (option == sort) Icon(Icons.Outlined.Check, null) })
+                if (tab == 1 || folderOpen) item {
+                    DocumentSearch(activeQuery, {
+                        if (folderOpen) folderQuery = it else query = it
+                    }, { focusManager.clearFocus() })
+                    if (state.searching) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 8.dp))
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(if (folderOpen) "${matches.size} dokumen di folder ini" else "Semua dokumen (${matches.size})",
+                            Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
+                        Box {
+                            TextButton(onClick = { sortMenu = true }) {
+                                Icon(Icons.AutoMirrored.Outlined.Sort, null, Modifier.size(18.dp))
+                                Spacer(Modifier.width(6.dp)); Text(sort.label)
+                            }
+                            DropdownMenu(expanded = sortMenu, onDismissRequest = { sortMenu = false }) {
+                                DocumentSort.entries.forEach { option ->
+                                    DropdownMenuItem(text = { Text(option.label) }, onClick = {
+                                        sortName = option.name; sortMenu = false
+                                    }, leadingIcon = { if (option == sort) Icon(Icons.Outlined.Check, null) })
+                                }
                             }
                         }
                     }
                 }
-            }
-            state.ocrProgress?.let { progress -> item {
-                OutlinedCard(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                        Text("Membaca teks dokumen…",style=MaterialTheme.typography.titleMedium)
-                        if(progress.total>0) {
-                            LinearProgressIndicator(progress={ progress.completed.toFloat()/progress.total },modifier=Modifier.fillMaxWidth())
-                            Text("${progress.completed} dari ${progress.total} halaman")
-                        } else LinearProgressIndicator(Modifier.fillMaxWidth())
-                        TextButton(enabled=!progress.cancelling,onClick=model::cancelOcr) { Text(if(progress.cancelling) "Membatalkan…" else "Batalkan OCR") }
+                if (folderRoot) {
+                    item {
+                        Text("Ruang untuk dokumenmu", style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold)
+                        Spacer(Modifier.height(8.dp))
+                        Text("Buka folder untuk melihat dan mengatur isinya.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(Modifier.height(16.dp))
+                        FilledTonalButton(enabled = !state.busy, onClick = { editingFolderId = null; folderEditor = true },
+                            modifier = Modifier.semantics { contentDescription = "Buat folder" }) {
+                            Icon(Icons.Outlined.CreateNewFolder, null)
+                            Spacer(Modifier.width(8.dp)); Text("Buat folder")
+                        }
+                    }
+                    val entries = listOf(DocumentFolder("~", "Tanpa folder")) + state.folders
+                    items(entries.chunked(2), key = { it.first().id }) { row ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            row.forEach { entry ->
+                                FolderCard(entry, state.documents.count {
+                                    if (entry.id == "~") it.folderId == null else it.folderId == entry.id
+                                }, !state.busy, Modifier.weight(1f), onOpen = { selectedFolder = entry.id; folderQuery = "" },
+                                    onRename = { editingFolderId = entry.id; folderEditor = true },
+                                    onDelete = { deleteFolder = entry.id })
+                            }
+                            if (row.size == 1) Spacer(Modifier.weight(1f))
+                        }
                     }
                 }
-            } }
-            if (state.busy && !refreshing && state.ocrProgress==null) item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    LinearProgressIndicator(Modifier.fillMaxWidth())
-                    Text(state.progressText, style = MaterialTheme.typography.bodyMedium)
+                state.ocrProgress?.let { progress -> item {
+                    OutlinedCard(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Membaca teks dokumen…", style = MaterialTheme.typography.titleMedium)
+                            if (progress.total > 0) {
+                                LinearProgressIndicator(progress = { progress.completed.toFloat() / progress.total }, modifier = Modifier.fillMaxWidth())
+                                Text("${progress.completed} dari ${progress.total} halaman")
+                            } else LinearProgressIndicator(Modifier.fillMaxWidth())
+                            TextButton(enabled = !progress.cancelling, onClick = model::cancelOcr) {
+                                Text(if (progress.cancelling) "Membatalkan…" else "Batalkan OCR")
+                            }
+                        }
+                    }
+                } }
+                if (state.busy && !refreshing && state.ocrProgress == null) item {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        LinearProgressIndicator(Modifier.fillMaxWidth())
+                        Text(state.progressText, style = MaterialTheme.typography.bodyMedium)
+                    }
                 }
-            }
-            if (state.documents.isEmpty() && !state.busy) item {
-                OutlinedCard(Modifier.fillMaxWidth()) {
-                    Column(Modifier.fillMaxWidth().padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Icon(Icons.Outlined.DocumentScanner, contentDescription = null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
-                        Text("Mulai dari satu halaman", style = MaterialTheme.typography.titleLarge)
-                        Text("Nota, catatan, atau surat penting. Jadikan PDF tanpa watermark.")
-                        Button(onClick = requestScan) { Text("Scan Dokumen Pertama") }
+                if (!folderRoot) {
+                    val shown = if (tab == 0) state.documents.sortedByDescending { it.modified }.take(3) else matches
+                    if (shown.isEmpty() && !state.busy && !state.searching) item {
+                        DocumentEmptyState(folderOpen, activeQuery.isNotBlank(), requestScan,
+                            onClear = { if (folderOpen) folderQuery = "" else query = "" })
+                    }
+                    items(shown, key = { it.id }) { document ->
+                        DocumentCard(document, !state.busy, { onOpen(document) }, { onShare(document) },
+                            { onExport(document) }, { deleteId = document.id }, {
+                                renameId = document.id; renameText = document.name
+                            }, folderName = state.folders.find { it.id == document.folderId }?.name,
+                            onMove = { moveDocument = document.id }, onOcr = { model.recognize(document) },
+                            onText = { model.showText(document) },
+                            onPictures = { onTools(ToolMode.PDF_TO_IMAGES, document) },
+                            onSign = { onTools(ToolMode.SIGN_PDF, document) })
                     }
                 }
             }
-            if (tab == 1 && state.documents.isNotEmpty() && matches.isEmpty() && !state.busy && !state.searching) item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(if(query.isBlank() && selectedFolder!="*") "Folder ini masih kosong" else "Dokumen tidak ditemukan", style = MaterialTheme.typography.titleMedium)
-                    Text("Coba nama lain atau hapus pencarian untuk melihat semua dokumen.")
-                    TextButton(onClick = { query="";selectedFolder="*" }) { Text("Tampilkan semua dokumen") }
-                }
-            }
-            val shown = if (tab == 0) state.documents.take(5) else matches
-            items(shown, key = { it.id }) { document ->
-                DocumentCard(document, !state.busy, { onOpen(document) }, { onShare(document) },
-                    { onExport(document) }, { deleteId = document.id }, {
-                        renameId = document.id
-                        renameText = document.name
-                    },folderName=state.folders.find { it.id==document.folderId }?.name,
-                    onMove={ moveDocument=document.id },onOcr={ model.recognize(document) },onText={ model.showText(document) },
-                    onPictures={ onTools(ToolMode.PDF_TO_IMAGES,document) },onSign={ onTools(ToolMode.SIGN_PDF,document) })
-            }
-            if (tab == 0 && state.documents.size > 5) item {
-                TextButton(onClick = { tab = 1 }) { Text("Lihat semua dokumen") }
-            }
-        }
         }
     }
     if(folderEditor) FolderNameDialog(if(editingFolderId==null) "Buat folder" else "Ubah nama folder",
@@ -286,39 +325,40 @@ fun ScanlyApp(model: HomeViewModel, onScan: (String?) -> Unit, onOpen: (Document
 @Composable
 private fun DocumentCard(document: Document, enabled: Boolean, onOpen: () -> Unit, onShare: () -> Unit,
                          onExport: () -> Unit, onDelete: () -> Unit, onRename: () -> Unit,
-                         folderName: String?,onMove: ()->Unit,onOcr: ()->Unit,onText: ()->Unit,onPictures: ()->Unit,onSign: ()->Unit) {
+                         folderName: String?, onMove: () -> Unit, onOcr: () -> Unit, onText: () -> Unit,
+                         onPictures: () -> Unit, onSign: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
-    OutlinedCard(Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(start = 16.dp, top = 12.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Outlined.PictureAsPdf, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
+    OutlinedCard(onClick = onOpen, enabled = enabled, modifier = Modifier.fillMaxWidth(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+        colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Row(Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Outlined.PictureAsPdf, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
             Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(document.name, style = MaterialTheme.typography.titleSmall)
-                folderName?.let { Text(it,style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.primary) }
-                document.ocrPages?.let { Text("OCR tersedia · $it halaman",style=MaterialTheme.typography.labelSmall) }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(document.name, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 val pages = document.pageCount?.let { "$it halaman · " } ?: "PDF tidak dapat dibaca · "
-                Text(pages + formatSize(document.size), style = MaterialTheme.typography.bodySmall)
-                Text(DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(document.modified)),
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(pages + formatSize(document.size), style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                folderName?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary) }
+                if (document.ocrPages != null) Text("OCR tersedia", style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Box {
                 IconButton(enabled = enabled, onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, "Opsi ${document.name}") }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    DropdownMenuItem(text={ Text("Ekspor JPG/PNG") },enabled=document.pageCount!=null,onClick={ menu=false;onPictures() })
-                    DropdownMenuItem(text={ Text("Tambah tanda tangan") },enabled=document.pageCount!=null,onClick={ menu=false;onSign() })
-                    DropdownMenuItem(text={ Text(if(document.ocrPages==null) "Baca teks (OCR)" else "Jalankan ulang OCR") },enabled=document.pageCount!=null,onClick={ menu=false;onOcr() })
-                    DropdownMenuItem(text={ Text("Lihat teks") },enabled=document.ocrPages!=null,onClick={ menu=false;onText() })
-                    DropdownMenuItem(text={ Text("Pindahkan ke folder") },onClick={ menu=false;onMove() })
+                    DropdownMenuItem(text = { Text("Buka PDF") }, onClick = { menu = false; onOpen() })
+                    DropdownMenuItem(text = { Text("Bagikan") }, onClick = { menu = false; onShare() })
+                    DropdownMenuItem(text = { Text("Ekspor JPG/PNG") }, enabled = document.pageCount != null, onClick = { menu = false; onPictures() })
+                    DropdownMenuItem(text = { Text("Tambah tanda tangan") }, enabled = document.pageCount != null, onClick = { menu = false; onSign() })
+                    DropdownMenuItem(text = { Text(if (document.ocrPages == null) "Baca teks (OCR)" else "Jalankan ulang OCR") },
+                        enabled = document.pageCount != null, onClick = { menu = false; onOcr() })
+                    DropdownMenuItem(text = { Text("Lihat teks") }, enabled = document.ocrPages != null, onClick = { menu = false; onText() })
+                    DropdownMenuItem(text = { Text("Pindahkan ke folder") }, onClick = { menu = false; onMove() })
                     DropdownMenuItem(text = { Text("Ubah nama") }, onClick = { menu = false; onRename() })
                     DropdownMenuItem(text = { Text("Ekspor salinan PDF") }, onClick = { menu = false; onExport() })
                     DropdownMenuItem(text = { Text("Hapus") }, onClick = { menu = false; onDelete() })
                 }
             }
-        }
-        Row(Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
-            TextButton(enabled = enabled, onClick = onOpen) { Text("Buka PDF") }
-            TextButton(enabled = enabled, onClick = onShare) { Text("Bagikan") }
-            if(document.ocrPages!=null) TextButton(enabled=enabled,onClick=onText) { Text("Teks") }
         }
     }
 }

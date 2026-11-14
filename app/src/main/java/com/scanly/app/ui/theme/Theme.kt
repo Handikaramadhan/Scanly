@@ -11,11 +11,13 @@ import com.scanly.app.data.ThemeMode
 private val Light = lightColorScheme(
     primary = Color(0xFF275DCE), onPrimary = Color.White,
     primaryContainer = Color(0xFFE4ECFF), onPrimaryContainer = Color(0xFF123376),
+    secondaryContainer = Color(0xFFE4ECFF), onSecondaryContainer = Color(0xFF123376),
     background = Color(0xFFF8F9FD), surface = Color(0xFFF8F9FD)
 )
 private val Dark = darkColorScheme(
     primary = Color(0xFFB0C6FF), onPrimary = Color(0xFF002D73),
     primaryContainer = Color(0xFF173E85), onPrimaryContainer = Color(0xFFDBE5FF),
+    secondaryContainer = Color(0xFF173E85), onSecondaryContainer = Color(0xFFDBE5FF),
     background = Color(0xFF111318), surface = Color(0xFF111318)
 )
 @Composable

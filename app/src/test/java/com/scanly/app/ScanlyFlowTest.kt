@@ -32,8 +32,11 @@ class ScanlyFlowTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     @Before fun resetTestFixtures() {
         // Only the simulator's isolated app directory; never a connected user's data.
-        File(model().getApplication<android.app.Application>().filesDir, "documents").listFiles().orEmpty().forEach { it.delete() }
-        compose.runOnIdle { model().setTheme(ThemeMode.SYSTEM); model().refresh() }
+        awaitIdle()
+        val app = model().getApplication<android.app.Application>()
+        File(app.filesDir, "documents").listFiles().orEmpty().forEach { it.delete() }
+        app.deleteDatabase("catalog.db")
+        compose.runOnIdle { model().closeText(); model().setTheme(ThemeMode.SYSTEM); model().refresh() }
         awaitIdle()
     }
     private fun model() = ViewModelProvider(compose.activity)[HomeViewModel::class.java]
@@ -163,6 +166,83 @@ class ScanlyFlowTest {
         assertEquals("IMAGES_TO_PDF",started.intent.getStringExtra("mode"))
         compose.runOnIdle { shadow.receiveResult(started.intent,android.app.Activity.RESULT_CANCELED,null) }
         assertEquals(com.scanly.app.ui.ScannerPhase.IDLE,model().state.value.scannerPhase)
+    }
+
+    @Test fun homePdfToolsChooseTheRequestedDocument() {
+        awaitIdle()
+        compose.runOnIdle { model().save(Uri.fromFile(fixture())) }
+        awaitIdle()
+        val document = model().state.value.documents.single()
+        var chosen: Pair<com.scanly.app.tools.ToolMode, String?>? = null
+        compose.activity.setContent {
+            com.scanly.app.ui.theme.ScanlyTheme {
+                com.scanly.app.ui.ScanlyApp(model(), onScan = {}, onOpen = {}, onShare = {}, onExport = {},
+                    onTools = { mode, pdf -> chosen = mode to pdf?.id })
+            }
+        }
+        screenshot("home-layout")
+        compose.onNodeWithContentDescription("PDF ke JPG/PNG").performClick()
+        compose.onNodeWithText("Pilih PDF untuk ekspor gambar").assertIsDisplayed()
+        compose.onNodeWithTag("tool-document-${document.id}").performClick()
+        assertEquals(com.scanly.app.tools.ToolMode.PDF_TO_IMAGES to document.id, chosen)
+        compose.onNodeWithContentDescription("Sematkan tanda tangan").performClick()
+        compose.onNodeWithText("Pilih PDF untuk tanda tangan").assertIsDisplayed()
+        compose.onNodeWithTag("tool-document-${document.id}").performClick()
+        assertEquals(com.scanly.app.tools.ToolMode.SIGN_PDF to document.id, chosen)
+    }
+
+    @Test fun pdfToolsWithNoDocumentsOfferScanWithoutLaunchingAnInvalidTool() {
+        awaitIdle()
+        var launches = 0
+        var scans = 0
+        compose.activity.setContent {
+            com.scanly.app.ui.theme.ScanlyTheme {
+                com.scanly.app.ui.ScanlyApp(model(), onScan = { scans++ }, onOpen = {}, onShare = {}, onExport = {},
+                    onTools = { _, _ -> launches++ })
+            }
+        }
+        compose.onNodeWithContentDescription("PDF ke JPG/PNG").performClick()
+        compose.onNodeWithText("Belum ada PDF yang bisa diproses.", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Batal", substring = false).performClick()
+        assertEquals(0, launches)
+        compose.onNodeWithContentDescription("Sematkan tanda tangan").performClick()
+        compose.onAllNodesWithText("Scan Dokumen", useUnmergedTree = true).onLast().performClick()
+        assertEquals(1, scans)
+        assertEquals(0, launches)
+    }
+
+    @Test fun productionFolderNavigationSurvivesActivityRecreation() {
+        awaitIdle()
+        compose.runOnIdle { model().createFolder("Arsip") }; awaitIdle()
+        val folder = model().state.value.folders.single()
+        compose.onNodeWithText("Folder", substring = false).performClick()
+        compose.onNodeWithTag("folder-${folder.id}").performClick()
+        compose.onNodeWithContentDescription("Kembali ke folder").assertExists()
+        compose.activityRule.scenario.recreate(); awaitIdle()
+        compose.onNodeWithContentDescription("Kembali ke folder").assertExists()
+        compose.onNodeWithText("Folder ini masih kosong").assertExists()
+        compose.onNodeWithContentDescription("Kembali ke folder").performClick()
+        compose.onNodeWithTag("folder-list").assertExists()
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h640dp-mdpi")
+    fun quickToolsAndFolderCardsRemainReachableOnSmallScreenWithLargeText() {
+        awaitIdle()
+        compose.activity.setContent {
+            androidx.compose.runtime.CompositionLocalProvider(
+                androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(1f, 1.5f)) {
+                com.scanly.app.ui.theme.ScanlyTheme {
+                    com.scanly.app.ui.ScanlyApp(model(), onScan = {}, onOpen = {}, onShare = {}, onExport = {})
+                }
+            }
+        }
+        compose.onNodeWithContentDescription("Sematkan tanda tangan").performScrollTo().assertIsDisplayed()
+        screenshot("home-small-large-font")
+        compose.onNodeWithText("Folder", substring = false).performClick()
+        compose.onNodeWithTag("folder-~").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Kembali ke folder").assertIsDisplayed()
+        compose.onNodeWithText("Scan ke folder ini").performScrollTo().assertIsDisplayed()
     }
 
     @Test fun pullingDownReloadsNewDocumentsOnHomeAndDocumentsTab() {

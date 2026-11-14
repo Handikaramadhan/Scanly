@@ -1,16 +1,16 @@
-# Scanly 1.7.1
+# Scanly 1.8.0
 
 Pemindai dokumen Android gratis dengan kode aplikasi open source (Apache-2.0), tanpa akun, iklan, langganan atau watermark. Kamera, deteksi tepi, crop, filter dan editor kembali memakai **Google ML Kit Document Scanner**, dengan konfigurasi scanner penuh seperti versi awal. Komponen scanner Google sendiri tidak open source.
 
 ## Unduh dan pasang
 
-Source resmi: [Handikaramadhan/Scanly](https://github.com/Handikaramadhan/Scanly). APK dibagikan melalui **[GitHub Releases](https://github.com/Handikaramadhan/Scanly/releases)**. Rilis uji 1.7.0 sudah tersedia; paket 1.7.1 menggunakan kunci penerbit khusus dan menunggu pengunggahan sebagai rilis berikutnya.
+Source resmi: [Handikaramadhan/Scanly](https://github.com/Handikaramadhan/Scanly). APK dibagikan melalui **[GitHub Releases](https://github.com/Handikaramadhan/Scanly/releases)**. Versi 1.8.0 membawa layout baru berdasarkan wireframe pemilik: empat alat di Beranda, Dokumen terpisah dari Folder, dan kartu folder yang dapat dibuka.
 
-Untuk 1.7.1, pilih **Scanly-1.7.1.apk** dan cocokkan SHA-256 pada release tersebut. Android dapat meminta izin memasang aplikasi dari browser/file manager. Android minimum 6.0; scanner memerlukan Google Play services yang kompatibel dan perangkat dengan RAM minimum 1,7 GB.
+APK versi ini adalah **Scanly-1.8.0.apk**, menggunakan package dan kunci penerbit yang sama dengan 1.7.1. Instal sebagai pembaruan tanpa uninstall; tidak ada migrasi lokasi PDF atau katalog. Cocokkan checksum rilis. Android minimum 6.0; scanner memerlukan Google Play services kompatibel.
 
-**Pindah dari APK uji 1.7.0 atau versi sebelumnya:** ekspor semua PDF penting dan TXT hasil OCR terlebih dahulu ke penyimpanan di luar aplikasi. Buka hasil ekspor untuk memastikan salinannya utuh. Kunci penerbit baru berbeda dari kunci uji, sehingga APK baru tidak dapat memperbarui instalasi lama secara langsung. Setelah ekspor, uninstall APK uji lalu instal 1.7.1. Uninstall menghapus PDF internal, folder dan indeks OCR. Ekspor PDF tidak membawa metadata folder/OCR; aplikasi belum menyediakan pemulihan seluruh library atau impor PDF lama. Salinan PDF tetap dapat dibuka lewat file manager/viewer PDF.
+Pengguna APK uji 1.7.0/sebelumnya perlu ekspor PDF/TXT sebelum mengganti instalasi karena kunci APK uji berbeda. Uninstall menghapus data internal, folder dan indeks OCR. Jangan uninstall 1.7.1 untuk memperbarui ke 1.8.0.
 
-Update berikutnya dari jalur rilis 1.7.1 menggunakan package dan kunci penerbit yang sama. Jangan memakai APK debug dari Actions sebagai pembaruan. Panduan signing dan publikasi: [GitHub Releases](docs/GITHUB_RELEASE.md).
+Panduan signing dan publikasi: [GitHub Releases](docs/GITHUB_RELEASE.md). Artifact debug Actions bukan jalur pembaruan pengguna.
 
 ## Cara scan
 
@@ -23,9 +23,9 @@ Tidak ada batas halaman buatan Scanly; kapasitas praktis bergantung perangkat/sc
 
 ## Gambar, PDF dan tanda tangan
 
-- **Gambar → PDF:** ketuk ikon **Gambar ke PDF** di kanan atas. Pilih beberapa gambar, atur urutannya dengan Naik/Turun, hapus yang tidak diperlukan, lalu Buat PDF. Orientasi EXIF diperbaiki; gambar transparan diberi dasar putih. Gambar galeri tidak diubah.
-- **PDF → JPG/PNG:** buka menu PDF → **Ekspor JPG/PNG**. Pilih format dan halaman untuk satu berkas gambar, atau ekspor semua halaman sebagai gambar berurutan dalam ZIP. Pemilih berkas Android menentukan lokasi hasil.
-- **TTD:** menu PDF → **Tambah tanda tangan**. Gambar dengan jari (Urungkan/Bersihkan tersedia), atau pilih foto/PNG tanda tangan. Foto diproses dengan penghapus latar lokal, lalu gunakan penggeser koreksi bila perlu. Paling cocok tinta gelap di kertas terang; bukan penghapus latar subjek/foto umum.
+- **Gambar → PDF:** ketuk **JPG ke PDF** di Beranda. Pilih beberapa gambar, atur urutannya dengan Naik/Turun, hapus yang tidak diperlukan, lalu Buat PDF. Orientasi EXIF diperbaiki; gambar transparan diberi dasar putih. Gambar galeri tidak diubah.
+- **PDF → JPG/PNG:** ketuk **PDF ke JPG/PNG** di Beranda dan pilih PDF, atau buka menu PDF → **Ekspor JPG/PNG**. Pilih format dan halaman untuk satu berkas gambar, atau ekspor semua halaman sebagai gambar berurutan dalam ZIP. Pemilih berkas Android menentukan lokasi hasil.
+- **TTD:** ketuk **Sematkan tanda tangan** di Beranda lalu pilih PDF, atau menu PDF → **Tambah tanda tangan**. Gambar dengan jari (Urungkan/Bersihkan tersedia), atau pilih foto/PNG tanda tangan. Foto diproses dengan penghapus latar lokal, lalu gunakan penggeser koreksi bila perlu. Paling cocok tinta gelap di kertas terang; bukan penghapus latar subjek/foto umum.
 - Pilih halaman, ketuk/geser tanda tangan untuk posisi, atur ukuran lalu **Simpan PDF bertanda tangan**. Satu tanda tangan ditempel pada halaman yang dipilih dalam satu operasi. PDF sumber tetap tersimpan; hasil adalah salinan baru yang dapat diberi nama atau dipindahkan ke folder.
 
 Tanda tangan berupa gambar visual, bukan sertifikat digital. Salinan bertanda tangan dirender ulang menjadi PDF gambar; lapisan teks, formulir, tautan dan anotasi interaktif PDF asal tidak dipertahankan di salinan. Ukuran halaman dipertahankan. OCR hasil lama tidak disalin ke PDF baru; jalankan OCR lagi bila diperlukan. Ekspor gambar/render tanda tangan memakai sisi maksimum 2200 px; gambar impor dinormalisasi sampai 2400 px untuk membatasi memori.
@@ -34,7 +34,11 @@ Semua proses alat berjalan lokal. Input/TTD sesi disimpan sementara di cache pri
 
 ## Folder dan OCR
 
-Di tab **Dokumen**, ketuk **Buat folder**, pilih folder untuk memfilter daftar, atau gunakan **Opsi folder** untuk rename/hapus. Menu **Pindahkan ke folder** pada PDF mengatur keanggotaannya. Menghapus folder mengembalikan dokumen ke **Tanpa folder** tanpa menghapus PDF. Scan yang dimulai dari folder terpilih disimpan ke folder tersebut.
+Tab **Dokumen** menampilkan semua PDF beserta pencarian/urut; tidak lagi memiliki chip/filter folder. Buka tab **Folder** untuk melihat kartu berbentuk folder, nama, dan jumlah dokumen. Ketuk **Buat folder**, lalu buka kartu untuk melihat isi. Menu tiga titik pada kartu atau halaman folder menyediakan rename/hapus. **Tanpa folder** mengumpulkan PDF yang belum dikelompokkan.
+
+Menu **Pindahkan ke folder** pada PDF mengatur keanggotaannya. Menghapus folder mengembalikan isinya ke **Tanpa folder** tanpa menghapus PDF/OCR. Scan dari halaman isi folder otomatis diarahkan ke folder tersebut; scan dari Beranda/Dokumen tidak. Kembali dari isi folder membuka daftar folder. Pencarian di Dokumen dan isi folder disimpan terpisah.
+
+Folder ditampilkan sebagai objek visual yang dapat dibuka. Pengelompokan masih dicatat di katalog lokal; tidak ada pemindahan atau penggantian lokasi PDF lama.
 
 Menu **Baca teks (OCR)** memproses PDF yang sudah tersimpan, satu halaman setiap kali. Model Latin untuk dokumen Indonesia/Inggris disertakan di APK dan berjalan lokal. Hasil tampil per halaman, dapat diseleksi/disalin, dibagikan sebagai teks atau diekspor sebagai TXT. Pencarian **nama atau isi dokumen** mencakup hasil OCR yang sudah selesai dan mengikuti folder terpilih. Periksa hasil karena OCR bisa keliru.
 
@@ -56,7 +60,7 @@ Tarik ke bawah dari bagian atas Beranda/Dokumen untuk memuat ulang. Pencarian na
 
 ## Membangun dari source
 
-APK distribusi 1.7.1 adalah `artifacts/Scanly-1.7.1.apk`: optimized, tidak debuggable, dan memakai kunci penerbit khusus. APK debug untuk diagnosis; APK/AAB unsigned perlu ditandatangani sebelum distribusi. Kunci privat tidak disertakan dalam source.
+APK distribusi 1.8.0 adalah `artifacts/Scanly-1.8.0.apk`: optimized, tidak debuggable, dan memakai kunci penerbit khusus. APK debug untuk diagnosis; APK/AAB unsigned perlu ditandatangani sebelum distribusi. Kunci privat tidak disertakan dalam source.
 
 Build: JDK 21, Android SDK 36, Build Tools 35.0.0, Python 3, minSdk 23. Build pertama memerlukan internet untuk dependency. Siapkan local.properties untuk SDK lokal.
 

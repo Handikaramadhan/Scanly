@@ -1,3 +1,12 @@
+# 1.8.0
+
+- Layout Beranda mengikuti wireframe pemilik: slogan, empat tombol alat dalam grid 2×2, pemisah dan tiga dokumen terbaru.
+- Akses langsung Scan Dokumen, PDF ke JPG/PNG, JPG ke PDF dan Sematkan tanda tangan. Alat berbasis PDF membuka pemilih dokumen dengan pencarian dan keadaan kosong.
+- Tab Folder terpisah dari Dokumen. Kartu bergambar folder menampilkan nama/jumlah dokumen, isi yang dapat dibuka, rename/hapus, serta Tanpa folder.
+- Dokumen selalu menampilkan seluruh library, pencarian/urut tetap tersedia. Pencarian folder terpisah dan tombol Kembali mengikuti hierarki folder.
+- Kartu PDF lebih ringkas: ketuk untuk buka, menu tiga titik untuk bagikan/ekspor/OCR/pindah/rename/hapus.
+- Package/kunci penerbit 1.7.1 dipertahankan, versionCode 12; PDF, keanggotaan folder dan OCR tidak dimigrasikan.
+
 # 1.7.1
 
 - Kunci penerbit khusus RSA-4096 untuk jalur rilis GitHub dan pembaruan selanjutnya.

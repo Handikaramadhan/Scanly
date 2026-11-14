@@ -2,8 +2,9 @@
 
 Aplikasi Android Kotlin/Jetpack Compose, minSdk 23, target/compile SDK 36, JDK 21. Kode aplikasi Apache-2.0; scanner Google dan OCR ML Kit adalah komponen pihak ketiga dengan ketentuannya sendiri.
 
-## Fitur aktif 1.7
+## Fitur aktif 1.8
 
+- Layout Beranda dengan empat alat, halaman Dokumen untuk seluruh library dan tab Folder tersendiri dengan kartu folder.
 - Scanner/editor Google mode FULL, impor galeri dan hasil PDF tanpa page limit buatan aplikasi.
 - PDF privat: daftar, pencarian nama/hasil OCR, folder, rename, buka, bagikan, ekspor dan hapus.
 - OCR Latin bundled: PdfRenderer per halaman → recognizer lokal → transaksi teks per halaman di SQLite. PDF asli tidak ditambah lapisan teks.
