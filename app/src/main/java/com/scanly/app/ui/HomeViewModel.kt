@@ -8,6 +8,7 @@ import com.scanly.app.data.AppPreferences
 import com.scanly.app.data.Document
 import com.scanly.app.data.DocumentRepository
 import com.scanly.app.data.DocumentFolder
+import com.scanly.app.data.FolderAppearance
 import com.scanly.app.data.OcrText
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -73,7 +74,13 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     fun export(documentId: String, uri: Uri) = runOperation("Mengekspor PDF…", "Salinan PDF berhasil diekspor.") { repository.export(documentId, uri) }
 
     fun exportText(documentId: String,uri: Uri)=runOperation("Mengekspor teks…","Teks berhasil diekspor.") { repository.exportText(documentId,uri) }
-    fun createFolder(name: String)=runOperation("Membuat folder…","Folder dibuat.") { repository.createFolder(name) }
+    fun createFolder(name: String, color: String = FolderAppearance.DEFAULT_COLOR,
+                     icon: String = FolderAppearance.DEFAULT_ICON) = runOperation("Membuat folder…", "Folder dibuat.") {
+        repository.createFolder(name, color, icon)
+    }
+    fun updateFolder(id: String, name: String, color: String, icon: String) = runOperation("Menyimpan folder…", "Folder diperbarui.") {
+        repository.updateFolder(id, name, color, icon)
+    }
     fun renameFolder(id: String,name: String)=runOperation("Mengubah folder…","Nama folder diubah.") { repository.renameFolder(id,name) }
     fun deleteFolder(id: String)=runOperation("Menghapus folder…","Folder dihapus. PDF dipertahankan di Tanpa folder.") { repository.deleteFolder(id) }
     fun move(document: Document,folderId: String?)=runOperation("Memindahkan dokumen…","Folder dokumen diubah.") { repository.move(document,folderId) }

@@ -1,21 +1,24 @@
-# Layout Scanly 1.8
+# Layout Scanly 1.9
 
-Mengikuti wireframe pemilik di Untitled-2026-11-03-1835.png. Gambar asli tetap di workspace; implementasi memakai Compose native dan tema terang/gelap yang sudah ada.
+Susunan Beranda/Dokumen mengikuti wireframe pemilik, dengan penyempurnaan warna dan folder sesuai permintaan berikutnya.
 
-- Beranda: judul Scanly, slogan dan penjelasan singkat, alat 2×2, pemisah, lalu tiga dokumen terbaru. Scan Dokumen membuka Google; JPG ke PDF menerima gambar. PDF ke JPG/PNG dan Sematkan tanda tangan membuka halaman pemilih PDF yang dapat dicari.
-- Dokumen: pencarian di atas seluruh PDF, pengurutan dan kartu dokumen ringkas. Ketuk kartu untuk buka; menu tiga titik memuat operasi dokumen. Tidak ada chip atau pengelolaan folder di atas daftar.
-- Folder: tab tersendiri, tombol Buat folder dan kartu 2 kolom dengan ilustrasi folder, nama, jumlah dokumen dan menu rename/hapus. Tanpa folder adalah kategori bawaan. Ketuk kartu untuk membuka isi; scan di dalamnya menyimpan ke folder terpilih.
-- Pengaturan: tema dan informasi aplikasi tetap tersedia sebagai tab keempat.
+- Beranda: empat alat 2×2, berwarna biru (scan), jingga (PDF ke gambar), hijau (gambar ke PDF), dan ungu (tanda tangan). Warna menyesuaikan tema terang/gelap. Tiga dokumen terbaru tetap di bawahnya.
+- Dokumen: seluruh PDF, pencarian/urut dan menu pengelolaan. Tidak ada chip folder.
+- Folder: daftar satu kolom dengan ikon kecil, nama dan jumlah dokumen. Tidak ada ilustrasi thumbnail/grid. Ketuk baris untuk membuka isi; menu menyediakan rename, Warna dan ikon, serta hapus.
+- Editor folder: nama, delapan warna pilihan, warna sendiri lewat HEX #RRGGBB dan sepuluh ikon. Warna biru/ikon folder dipakai otomatis bila tidak memilih. Gunakan tampilan bawaan mengembalikan keduanya.
+- Pengaturan dan pemilih PDF tetap terpisah. Back dari isi folder ke daftar; Back dari editor membatalkan draft. Draft tetap ada setelah Activity dibuat ulang.
 
-Kembali dari isi folder menuju grid, dari pemilih PDF menuju Beranda. Pencarian folder tidak memfilter tab Dokumen. Posisi folder dipulihkan saat Activity dibuat ulang. Tarik untuk refresh tetap tersedia.
+Ikon pilihan: folder, kerja, sekolah, tagihan, pribadi, rumah, kesehatan, perjalanan, foto, favorit. Tanpa folder adalah kategori sistem dan tidak dikustomisasi. Pilihan lokal tersimpan pada katalog versi 2; migrasi hanya menambah warna/ikon, tanpa memindahkan PDF.
 
-Folder visual tetap memakai katalog lokal yang sama; tidak ada migrasi direktori PDF atau perubahan signing identity. APK 1.8.0 adalah pembaruan untuk APK penerbit 1.7.1.
+Target sentuh pemilih warna/ikon minimal 48 dp. Warna terpilih memiliki outline dan centang; ikon terpilih memiliki outline dan latar. Warna custom memilih glyph hitam/putih menurut luminance agar ikon tetap terbaca. Tombol Simpan tetap terpisah dari daftar yang dapat digulir dan notifikasi.
 
 Screenshot sintetis hasil tes lokal:
 
 - [Beranda](screenshots/home-layout.png)
-- [Folder](screenshots/folders-grid.png)
-- [Dokumen](screenshots/documents-search.png)
-- [320 dp dan font 150%](screenshots/home-small-large-font.png)
+- [Daftar folder](screenshots/folders-list.png)
+- [Editor warna/ikon](screenshots/folder-appearance-editor.png)
+- [Beranda gelap](screenshots/home-colors-dark.png)
+- [Daftar gelap](screenshots/folders-list-dark.png)
+- [320 dp/font 150%](screenshots/home-small-large-font.png)
 
 Screenshot bukan foto layar HP. Keyboard, TalkBack dan native scanner/renderer tetap mengikuti DEVICE_TESTS.md.

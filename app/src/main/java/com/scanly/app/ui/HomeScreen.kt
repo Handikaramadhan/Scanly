@@ -68,11 +68,14 @@ fun ScanlyApp(model: HomeViewModel, onScan: (String?) -> Unit, onOpen: (Document
     val foldersList = rememberLazyListState()
     val folderDocumentsList = rememberLazyListState()
     val closeFolder = { selectedFolder = "*"; folderQuery = "" }
-    BackHandler(enabled = toolPicker != null || tab != 0) {
-        if (toolPicker != null) toolPicker = null else if (folderOpen) closeFolder() else tab = 0
+    BackHandler(enabled = folderEditor || toolPicker != null || tab != 0) {
+        if (folderEditor) folderEditor = false else if (toolPicker != null) toolPicker = null else if (folderOpen) closeFolder() else tab = 0
     }
     LaunchedEffect(state.folders, state.operationRunning) {
-        if (!state.operationRunning && selectedFolder != "*" && selectedFolder != "~" && folder == null) closeFolder()
+        if (!state.operationRunning) {
+            if (selectedFolder != "*" && selectedFolder != "~" && folder == null) closeFolder()
+            if (editingFolderId != null && state.folders.none { it.id == editingFolderId }) folderEditor = false
+        }
     }
     LaunchedEffect(activeQuery) { model.search(activeQuery) }
     LaunchedEffect(query, sortName) { documentsList.scrollToItem(0) }
@@ -99,20 +102,23 @@ fun ScanlyApp(model: HomeViewModel, onScan: (String?) -> Unit, onOpen: (Document
     Scaffold(
         topBar = {
             TopAppBar(title = {
-                Text(if (toolPicker != null) "Pilih PDF" else when (tab) {
+                Text(if (folderEditor) { if (editingFolderId == null) "Buat folder" else "Edit folder" }
+                else if (toolPicker != null) "Pilih PDF" else when (tab) {
                     1 -> "Dokumen"
                     2 -> if (folderOpen) folder?.name ?: "Tanpa folder" else "Folder"
                     3 -> "Pengaturan"
                     else -> "Scanly"
                 }, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
             }, navigationIcon = {
-                if (toolPicker != null) IconButton(onClick = { toolPicker = null }) {
+                if (folderEditor) IconButton(onClick = { folderEditor = false }) {
+                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Tutup editor folder")
+                } else if (toolPicker != null) IconButton(onClick = { toolPicker = null }) {
                     Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Kembali ke Beranda")
                 } else if (folderOpen) IconButton(onClick = closeFolder) {
                     Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Kembali ke folder")
                 }
             }, actions = {
-                if (toolPicker == null && folderOpen && folder != null) Box {
+                if (!folderEditor && toolPicker == null && folderOpen && folder != null) Box {
                     IconButton(enabled = !state.busy, onClick = { folderMenu = true }) {
                         Icon(Icons.Outlined.MoreVert, "Opsi folder")
                     }
@@ -122,9 +128,9 @@ fun ScanlyApp(model: HomeViewModel, onScan: (String?) -> Unit, onOpen: (Document
                 }
             })
         },
-        snackbarHost = { SnackbarHost(snackbar) },
+        snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = if (folderEditor) 80.dp else 0.dp)) },
         bottomBar = {
-            NavigationBar {
+            if (!folderEditor) NavigationBar {
                 listOf("Beranda" to Icons.Outlined.Home, "Dokumen" to Icons.Outlined.Description,
                     "Folder" to Icons.Outlined.Folder, "Pengaturan" to Icons.Outlined.Settings).forEachIndexed { index, item ->
                     NavigationBarItem(selected = tab == index, onClick = { focusManager.clearFocus(); toolPicker = null; tab = index },
@@ -133,12 +139,19 @@ fun ScanlyApp(model: HomeViewModel, onScan: (String?) -> Unit, onOpen: (Document
             }
         },
         floatingActionButton = {
-            if (toolPicker == null && (tab == 1 || folderOpen) && !state.busy) ExtendedFloatingActionButton(
+            if (!folderEditor && toolPicker == null && (tab == 1 || folderOpen) && !state.busy) ExtendedFloatingActionButton(
                 onClick = requestScan, icon = { Icon(Icons.Outlined.DocumentScanner, null) },
                 text = { Text("Scan Dokumen") })
         }
     ) { padding ->
-        if (toolPicker != null) {
+        if (folderEditor) {
+            FolderEditorScreen(state.folders.find { it.id == editingFolderId }, state.folders, !state.busy,
+                modifier = Modifier.padding(padding), onSave = { name, color, icon ->
+                    editingFolderId?.let { model.updateFolder(it, name, color, icon) }
+                        ?: model.createFolder(name, color, icon)
+                    folderEditor = false
+                })
+        } else if (toolPicker != null) {
             val mode = ToolMode.valueOf(toolPicker!!)
             ToolDocumentPicker(mode, state.documents, !state.busy,
                 modifier = Modifier.padding(padding), onDismiss = { toolPicker = null },
@@ -221,17 +234,12 @@ fun ScanlyApp(model: HomeViewModel, onScan: (String?) -> Unit, onOpen: (Document
                         }
                     }
                     val entries = listOf(DocumentFolder("~", "Tanpa folder")) + state.folders
-                    items(entries.chunked(2), key = { it.first().id }) { row ->
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            row.forEach { entry ->
-                                FolderCard(entry, state.documents.count {
-                                    if (entry.id == "~") it.folderId == null else it.folderId == entry.id
-                                }, !state.busy, Modifier.weight(1f), onOpen = { selectedFolder = entry.id; folderQuery = "" },
-                                    onRename = { editingFolderId = entry.id; folderEditor = true },
-                                    onDelete = { deleteFolder = entry.id })
-                            }
-                            if (row.size == 1) Spacer(Modifier.weight(1f))
-                        }
+                    items(entries, key = { it.id }) { entry ->
+                        FolderRow(entry, state.documents.count {
+                            if (entry.id == "~") it.folderId == null else it.folderId == entry.id
+                        }, !state.busy, onOpen = { selectedFolder = entry.id; folderQuery = "" },
+                            onRename = { editingFolderId = entry.id; folderEditor = true },
+                            onDelete = { deleteFolder = entry.id })
                     }
                 }
                 state.ocrProgress?.let { progress -> item {
@@ -274,12 +282,6 @@ fun ScanlyApp(model: HomeViewModel, onScan: (String?) -> Unit, onOpen: (Document
             }
         }
     }
-    if(folderEditor) FolderNameDialog(if(editingFolderId==null) "Buat folder" else "Ubah nama folder",
-        state.folders.find { it.id==editingFolderId }?.name ?: "",state.folders,editingFolderId,
-        onDismiss={ folderEditor=false },onSave={ name ->
-            folderEditor=false
-            editingFolderId?.let { model.renameFolder(it,name) } ?: model.createFolder(name)
-        })
     state.folders.find { it.id==deleteFolder }?.let { folder -> AlertDialog(onDismissRequest={ deleteFolder=null },
         title={ Text("Hapus folder?") },text={ Text("Hapus ${folder.name}? Semua PDF di dalamnya tetap tersimpan di Tanpa folder.") },
         confirmButton={ TextButton(enabled=!state.busy,onClick={ deleteFolder=null;model.deleteFolder(folder.id) }) { Text("Hapus folder") } },

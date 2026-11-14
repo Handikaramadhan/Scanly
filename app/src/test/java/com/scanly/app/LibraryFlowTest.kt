@@ -80,8 +80,7 @@ class LibraryFlowTest {
     @Test fun folderCreateMoveRenameDeleteAndScannerTargetKeepPdf() {
         val document=save();val bytes=document.file.readBytes()
         compose.onNodeWithText("Dokumen").performClick()
-        // Dialog text-input idling is a Robolectric limitation also seen in PDF rename.
-        // Validate the actual create/rename operations here; keyboard/form behavior stays in DEVICE_TESTS.
+        // Seed via the model here; actual create/appearance editor choices are exercised below.
         compose.onNodeWithContentDescription("Buat folder").assertDoesNotExist()
         compose.onNodeWithText("Folder", substring=false).performClick()
         compose.onNodeWithContentDescription("Buat folder").assertExists()
@@ -154,6 +153,44 @@ class LibraryFlowTest {
         compose.onNodeWithText(filed.name, substring = false).assertExists()
         compose.onNodeWithContentDescription("Kembali ke folder").performClick()
         compose.onNodeWithTag("folder-list").assertExists()
+    }
+
+    @Test fun folderColorAndIconCanBeChangedAndResetFromTheList() {
+        compose.runOnIdle { model.createFolder("Pribadi") }; idle()
+        val folder = model.state.value.folders.single()
+        compose.onNodeWithText("Folder", substring = false).performClick()
+        compose.onNodeWithContentDescription("Opsi folder Pribadi").performClick()
+        compose.onNodeWithText("Warna dan ikon", substring = false).performClick()
+        compose.onNodeWithContentDescription("Warna Hijau").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Ikon Kerja").performScrollTo().performClick()
+        screenshot("folder-appearance-editor")
+        compose.onNodeWithText("Simpan folder", substring = false).performClick(); idle()
+        assertEquals("#16734B", model.state.value.folders.single().color)
+        assertEquals("work", model.state.value.folders.single().icon)
+        assertEquals(folder.id, model.state.value.folders.single().id)
+        compose.runOnIdle { model.state.value.message?.let(model::dismissMessage) }; compose.waitForIdle()
+        screenshot("folders-list")
+        compose.onNodeWithContentDescription("Opsi folder Pribadi").performClick()
+        compose.onNodeWithText("Warna dan ikon", substring = false).performClick()
+        compose.onNodeWithTag("folder-editor").performScrollToNode(hasText("Gunakan tampilan bawaan"))
+        compose.onNodeWithText("Gunakan tampilan bawaan").performClick()
+        compose.onNodeWithText("Simpan folder", substring = false).performClick(); idle()
+        assertEquals(com.scanly.app.data.DocumentFolder(folder.id, "Pribadi"), model.state.value.folders.single())
+        val persisted = kotlinx.coroutines.runBlocking { com.scanly.app.data.DocumentRepository(model.getApplication<Application>()).folders() }.single()
+        assertEquals(com.scanly.app.data.DocumentFolder(folder.id, "Pribadi"), persisted)
+    }
+
+    @Test fun createWithCustomHexAndDefaultIconRejectsInvalidColor() {
+        compose.onNodeWithText("Folder", substring = false).performClick()
+        compose.onNodeWithContentDescription("Buat folder").performClick()
+        compose.onNodeWithTag("folder-name").performSemanticsAction(SemanticsActions.SetText) { it(AnnotatedString("Warna sendiri")) }
+        compose.onNodeWithText("Warna lain (kode HEX)").performScrollTo().performClick()
+        compose.onNodeWithTag("folder-custom-color").performScrollTo().performSemanticsAction(SemanticsActions.SetText) { it(AnnotatedString("#ZZZZZZ")) }
+        compose.onNodeWithText("Simpan folder").assertIsNotEnabled()
+        compose.onNodeWithTag("folder-custom-color").performSemanticsAction(SemanticsActions.SetText) { it(AnnotatedString("#ab34ef")) }
+        compose.onNodeWithText("Simpan folder").assertIsEnabled().performClick(); idle()
+        assertEquals("#AB34EF", model.state.value.folders.single().color)
+        assertEquals("folder", model.state.value.folders.single().icon)
     }
 
     @Test fun cancelledRepeatedOcrKeepsPreviousCompleteText() {

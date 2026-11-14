@@ -94,4 +94,74 @@ class DocumentCatalogTest {
         assertEquals(pages,catalog.readOcr(file.name)!!.pages)
     }
 
+    @Test fun appearancePersistsThroughRenameAndResetWithoutChangingPdfOrOcr() {
+        val file = file(); val original = file.readBytes(); val catalog = DocumentCatalog(app)
+        catalog.synchronize(listOf(file))
+        val folder = catalog.createFolder("Kerja", "#ab12ef", "work")
+        catalog.move(file.name, folder.id)
+        catalog.saveOcr(file, listOf("Dokumen kerja"), file.length(), file.lastModified())
+        assertEquals("#AB12EF", DocumentCatalog(app).folders().single().color)
+        catalog.renameFolder(folder.id, "Kantor")
+        assertEquals("work", DocumentCatalog(app).folders().single().icon)
+        assertEquals("#AB12EF", DocumentCatalog(app).folders().single().color)
+        catalog.updateFolder(folder.id, "Arsip", "#16734B", "school")
+        assertEquals(DocumentFolder(folder.id, "Arsip", "#16734B", "school"), DocumentCatalog(app).folders().single())
+        catalog.updateFolder(folder.id, "Arsip", FolderAppearance.DEFAULT_COLOR, FolderAppearance.DEFAULT_ICON)
+        assertEquals(DocumentFolder(folder.id, "Arsip"), DocumentCatalog(app).folders().single())
+        assertEquals(folder.id, catalog.synchronize(listOf(file))[file.name]!!.folderId)
+        assertEquals("Dokumen kerja", catalog.readOcr(file.name)!!.text)
+        assertArrayEquals(original, file.readBytes())
+    }
+
+    @Test fun invalidAppearanceAndDuplicateNameDoNotPartiallyUpdateFolder() {
+        val catalog = DocumentCatalog(app)
+        val original = catalog.createFolder("Kerja", "#16734B", "work")
+        catalog.createFolder("Tagihan")
+        listOf("bad", "#123", "#GGGGGG", "#12345678").forEach { color ->
+            assertThrows(IllegalArgumentException::class.java) { catalog.updateFolder(original.id, "Berubah", color, "home") }
+        }
+        assertThrows(IllegalArgumentException::class.java) { catalog.updateFolder(original.id, "Berubah", "#275DCE", "not-an-icon") }
+        assertThrows(IllegalArgumentException::class.java) { catalog.updateFolder(original.id, "tagihan", "#275DCE", "home") }
+        assertThrows(IllegalArgumentException::class.java) { catalog.createFolder("Baru", "#123", "folder") }
+        assertEquals(original, catalog.folders().first { it.id == original.id })
+        assertEquals(2, catalog.folders().size)
+    }
+
+    @Test fun versionOneMigrationKeepsPdfFoldersOcrAndPendingRename() {
+        val oldFile = file(); val original = oldFile.readBytes()
+        val renamed = File(directory, "Hasil rename.pdf")
+        app.openOrCreateDatabase("catalog.db", android.content.Context.MODE_PRIVATE, null).use { db ->
+            db.execSQL("CREATE TABLE folders(id TEXT PRIMARY KEY,name TEXT NOT NULL,name_key TEXT NOT NULL UNIQUE)")
+            db.execSQL("CREATE TABLE documents(file_name TEXT PRIMARY KEY,folder_id TEXT REFERENCES folders(id) ON DELETE SET NULL,size INTEGER NOT NULL,modified INTEGER NOT NULL,ocr_pages INTEGER,ocr_at INTEGER)")
+            db.execSQL("CREATE INDEX document_folder ON documents(folder_id)")
+            db.execSQL("CREATE TABLE ocr_pages(file_name TEXT NOT NULL REFERENCES documents(file_name) ON UPDATE CASCADE ON DELETE CASCADE,page_index INTEGER NOT NULL,text TEXT NOT NULL,search_text TEXT NOT NULL,PRIMARY KEY(file_name,page_index))")
+            db.execSQL("CREATE TABLE pending_rename(old_name TEXT PRIMARY KEY,new_name TEXT NOT NULL UNIQUE)")
+            db.execSQL("INSERT INTO folders VALUES(?,?,?)", arrayOf("legacy", "Folder lama", "folder lama"))
+            db.execSQL("INSERT INTO documents VALUES(?,?,?,?,?,?)", arrayOf(oldFile.name, "legacy", oldFile.length(), oldFile.lastModified(), 1, 123L))
+            db.execSQL("INSERT INTO ocr_pages VALUES(?,?,?,?)", arrayOf(oldFile.name, 0, "Teks lama", "teks lama"))
+            db.execSQL("INSERT INTO pending_rename VALUES(?,?)", arrayOf(oldFile.name, renamed.name))
+            db.version = 1
+        }
+        assertTrue(oldFile.renameTo(renamed))
+        val catalog = DocumentCatalog(app)
+        assertEquals(DocumentFolder("legacy", "Folder lama"), catalog.folders().single())
+        assertEquals("legacy", catalog.synchronize(listOf(renamed))[renamed.name]!!.folderId)
+        assertEquals("Teks lama", catalog.readOcr(renamed.name)!!.text)
+        assertArrayEquals(original, renamed.readBytes())
+        assertEquals(directory, renamed.parentFile)
+        app.openOrCreateDatabase("catalog.db", android.content.Context.MODE_PRIVATE, null).use { db ->
+            assertEquals(2, db.version)
+            db.rawQuery("PRAGMA foreign_key_check", null).use { assertFalse(it.moveToFirst()) }
+            db.rawQuery("SELECT * FROM pending_rename", null).use { assertFalse(it.moveToFirst()) }
+        }
+    }
+
+    @Test fun unknownStoredAppearanceFallsBackToDefault() {
+        val catalog = DocumentCatalog(app); val folder = catalog.createFolder("Arsip")
+        app.openOrCreateDatabase("catalog.db", android.content.Context.MODE_PRIVATE, null).use { db ->
+            db.execSQL("UPDATE folders SET color=?,icon=? WHERE id=?", arrayOf("invalid", "future-icon", folder.id))
+        }
+        assertEquals(DocumentFolder(folder.id, "Arsip"), DocumentCatalog(app).folders().single())
+    }
+
 }

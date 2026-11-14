@@ -1,6 +1,6 @@
 package com.scanly.app.ui
 
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,10 +14,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
@@ -36,19 +34,32 @@ internal fun HomeTools(enabled: Boolean, onScan: () -> Unit, onPictures: () -> U
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             HomeTool("Scan Dokumen", "Scan Dokumen", Icons.Outlined.DocumentScanner, enabled, onScan, Modifier.weight(1f))
-            HomeTool("PDF ke JPG/PNG", "PDF ke JPG/PNG", Icons.Outlined.Image, enabled, onPictures, Modifier.weight(1f))
+            HomeTool("PDF ke JPG/PNG", "PDF ke JPG/PNG", Icons.Outlined.Image, enabled, onPictures, Modifier.weight(1f), tone = 1)
         }
         Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            HomeTool("JPG ke PDF", "Gambar ke PDF", Icons.Outlined.Collections, enabled, onImages, Modifier.weight(1f))
-            HomeTool("Sematkan tanda tangan", "Sematkan tanda tangan", Icons.Outlined.Draw, enabled, onSign, Modifier.weight(1f))
+            HomeTool("JPG ke PDF", "Gambar ke PDF", Icons.Outlined.Collections, enabled, onImages, Modifier.weight(1f), tone = 2)
+            HomeTool("Sematkan tanda tangan", "Sematkan tanda tangan", Icons.Outlined.Draw, enabled, onSign, Modifier.weight(1f), tone = 3)
         }
     }
 }
 
 @Composable
 private fun HomeTool(label: String, description: String, icon: ImageVector, enabled: Boolean,
-                     onClick: () -> Unit, modifier: Modifier) {
+                     onClick: () -> Unit, modifier: Modifier, tone: Int = 0) {
+    val dark = MaterialTheme.colorScheme.surface.luminance() < .5f
+    val palettes = if (dark) listOf(
+        Color(0xFF173665) to Color(0xFFBCD1FF), Color(0xFF49331A) to Color(0xFFFFCF93),
+        Color(0xFF163E30) to Color(0xFFA5DFBF), Color(0xFF36234F) to Color(0xFFDDC3FF)
+    ) else listOf(
+        Color(0xFFE4ECFF) to Color(0xFF1645A0), Color(0xFFFFF0DD) to Color(0xFF874305),
+        Color(0xFFE1F4EA) to Color(0xFF175D3F), Color(0xFFF0E7FF) to Color(0xFF603395)
+    )
+    val (background, foreground) = palettes[tone]
     OutlinedButton(onClick = onClick, enabled = enabled, shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.outlinedButtonColors(containerColor = background, contentColor = foreground,
+            disabledContainerColor = background.copy(alpha = .45f),
+            disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = .38f)),
+        border = BorderStroke(1.dp, foreground.copy(alpha = if (enabled) .2f else .08f)),
         modifier = modifier.fillMaxHeight().heightIn(min = 88.dp).semantics { contentDescription = description },
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 14.dp)) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -70,58 +81,38 @@ internal fun DocumentSearch(query: String, onQuery: (String) -> Unit, onSearch: 
 }
 
 @Composable
-internal fun FolderMenu(expanded: Boolean, onDismiss: () -> Unit, onRename: () -> Unit, onDelete: () -> Unit) {
+internal fun FolderMenu(expanded: Boolean, onDismiss: () -> Unit, onRename: () -> Unit, onDelete: () -> Unit, onAppearance: () -> Unit = onRename) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
         DropdownMenuItem(text = { Text("Ubah nama folder") }, leadingIcon = { Icon(Icons.Outlined.Edit, null) }, onClick = onRename)
+        DropdownMenuItem(text = { Text("Warna dan ikon") }, leadingIcon = { Icon(Icons.Outlined.Palette, null) }, onClick = onAppearance)
         DropdownMenuItem(text = { Text("Hapus folder") }, leadingIcon = { Icon(Icons.Outlined.DeleteOutline, null) }, onClick = onDelete)
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun FolderCard(folder: DocumentFolder, count: Int, enabled: Boolean, modifier: Modifier = Modifier,
-                        onOpen: () -> Unit, onRename: () -> Unit, onDelete: () -> Unit) {
+internal fun FolderRow(folder: DocumentFolder, count: Int, enabled: Boolean, modifier: Modifier = Modifier,
+                       onOpen: () -> Unit, onRename: () -> Unit, onDelete: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
     OutlinedCard(onClick = onOpen, enabled = enabled,
-        modifier = modifier.testTag("folder-${folder.id}"), shape = RoundedCornerShape(16.dp),
+        modifier = modifier.fillMaxWidth().testTag("folder-${folder.id}"), shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-        Column(Modifier.fillMaxWidth().padding(12.dp)) {
-            Box(Modifier.fillMaxWidth().height(96.dp)) {
-                FolderIllustration(Modifier.align(Alignment.Center).size(100.dp, 78.dp))
-                if (folder.id != "~") Box(Modifier.align(Alignment.TopEnd)) {
-                    IconButton(onClick = { menu = true }, enabled = enabled) {
-                        Icon(Icons.Outlined.MoreVert, "Opsi folder ${folder.name}", Modifier.size(20.dp))
-                    }
-                    FolderMenu(menu, { menu = false }, { menu = false; onRename() }, { menu = false; onDelete() })
-                }
+        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            FolderSymbol(folder, Modifier.size(44.dp))
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(folder.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text("$count dokumen", style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Text(folder.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold,
-                maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.heightIn(min = 40.dp))
-            Text("$count dokumen", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (folder.id != "~") Box {
+                IconButton(onClick = { menu = true }, enabled = enabled) {
+                    Icon(Icons.Outlined.MoreVert, "Opsi folder ${folder.name}")
+                }
+                FolderMenu(menu, { menu = false }, { menu = false; onRename() }, { menu = false; onDelete() })
+            } else Spacer(Modifier.width(12.dp))
         }
-    }
-}
-
-/** Decorative folder silhouette: the tab and inset sheets make it readable without relying on colour. */
-@Composable
-private fun FolderIllustration(modifier: Modifier = Modifier) {
-    val back = MaterialTheme.colorScheme.primary
-    val front = MaterialTheme.colorScheme.primaryContainer
-    val paper = MaterialTheme.colorScheme.surface
-    Canvas(modifier) {
-        val w = size.width; val h = size.height
-        val tab = Path().apply {
-            moveTo(w * .05f, h * .18f)
-            quadraticTo(w * .05f, h * .10f, w * .12f, h * .10f)
-            lineTo(w * .37f, h * .10f); lineTo(w * .47f, h * .23f)
-            lineTo(w * .88f, h * .23f)
-            quadraticTo(w * .95f, h * .23f, w * .95f, h * .31f)
-            lineTo(w * .95f, h * .86f); lineTo(w * .05f, h * .86f); close()
-        }
-        drawPath(tab, back)
-        drawRoundRect(paper, Offset(w * .16f, h * .29f), Size(w * .68f, h * .45f), CornerRadius(w * .03f))
-        drawRoundRect(front, Offset(w * .03f, h * .39f), Size(w * .94f, h * .51f), CornerRadius(w * .07f))
-        drawRoundRect(back.copy(alpha = .25f), Offset(w * .15f, h * .71f), Size(w * .26f, h * .035f), CornerRadius(w * .02f))
     }
 }
 

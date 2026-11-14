@@ -245,6 +245,37 @@ class ScanlyFlowTest {
         compose.onNodeWithText("Scan ke folder ini").performScrollTo().assertIsDisplayed()
     }
 
+    @Test fun folderAppearanceDraftSurvivesActivityRecreation() {
+        awaitIdle()
+        compose.runOnIdle { model().createFolder("Arsip") }; awaitIdle()
+        compose.runOnIdle { model().state.value.message?.let(model()::dismissMessage) }; compose.waitForIdle()
+        compose.onNodeWithText("Folder", substring = false).performClick()
+        compose.onNodeWithContentDescription("Opsi folder Arsip").performClick()
+        compose.onNodeWithText("Warna dan ikon").performClick()
+        compose.onNodeWithContentDescription("Warna Ungu").performScrollTo().performClick()
+        compose.onNodeWithTag("folder-editor").performScrollToNode(hasContentDescription("Ikon Favorit"))
+        compose.onNodeWithContentDescription("Ikon Favorit").performClick()
+        compose.activityRule.scenario.recreate(); awaitIdle()
+        compose.onNodeWithTag("folder-editor").performScrollToNode(hasContentDescription("Ikon Favorit"))
+        compose.onNodeWithContentDescription("Ikon Favorit").assertIsSelected()
+        compose.onNodeWithTag("folder-editor").performScrollToNode(hasContentDescription("Warna Ungu"))
+        compose.onNodeWithContentDescription("Warna Ungu").assertIsSelected()
+        compose.onNodeWithText("Simpan folder").performClick(); awaitIdle()
+        assertEquals("#7041B6", model().state.value.folders.single().color)
+        assertEquals("star", model().state.value.folders.single().icon)
+    }
+
+    @Test fun customWhiteFolderIconAndHomeToolsRenderInDarkTheme() {
+        awaitIdle()
+        compose.runOnIdle { model().setTheme(ThemeMode.DARK); model().createFolder("Belajar", "#FFFFFF", "school") }
+        awaitIdle()
+        compose.onNodeWithContentDescription("Sematkan tanda tangan").assertIsDisplayed()
+        screenshot("home-colors-dark")
+        compose.onNodeWithText("Folder", substring = false).performClick()
+        compose.onNodeWithTag("folder-${model().state.value.folders.single().id}").assertIsDisplayed()
+        screenshot("folders-list-dark")
+    }
+
     @Test fun pullingDownReloadsNewDocumentsOnHomeAndDocumentsTab() {
         awaitIdle()
         val directory=File(model().getApplication<android.app.Application>().filesDir,"documents")

@@ -1,8 +1,8 @@
-# Pengujian perangkat Scanly 1.8.0
+# Pengujian perangkat Scanly 1.9.0
 
 Tes lokal tidak menjalankan kamera/komponen scanner Google. Gunakan HP dengan Google Play services kompatibel; catat model, Android dan versi Play services.
 
-1. Update dari APK penerbit 1.7.1 ke 1.8.0 tanpa uninstall; pastikan PDF, folder dan OCR tetap terbaca. Untuk perpindahan dari APK uji, ekspor PDF/TXT dan periksa salinannya sebelum uninstall lalu instal 1.8.0. Kunci berbeda; update langsung tidak didukung. Pastikan aplikasi baru dapat scan/simpan/buka/bagikan/ekspor/rename. Uji update tanpa kehilangan data hanya antar-build yang memakai kunci penerbit yang sama.
+1. Update dari APK penerbit 1.7.1/1.8.0 ke 1.9.0 tanpa uninstall; pastikan PDF, folder dan OCR tetap terbaca. Untuk perpindahan dari APK uji, ekspor PDF/TXT dan periksa salinannya sebelum uninstall lalu instal 1.9.0. Kunci berbeda; update langsung tidak didukung. Pastikan aplikasi baru dapat scan/simpan/buka/bagikan/ekspor/rename. Uji update tanpa kehilangan data hanya antar-build yang memakai kunci penerbit yang sama.
 2. Buka Scan Dokumen dengan internet saat komponen belum tersedia. Tunggu penyiapan; kamera dan editor harus berasal dari Google, tanpa kamera kustom Scanly.
 3. Uji tanpa koneksi sebelum komponen siap: pesan gagal/coba lagi jelas, daftar PDF lama tetap dapat digunakan.
 4. Setelah satu scan online berhasil, aktifkan mode pesawat, tutup/buka app, scan baru, crop/rotasi/filter, tambah beberapa halaman dan simpan satu PDF.
@@ -26,7 +26,7 @@ Paket instrumentasi memeriksa save/rename/export/delete dengan PdfRenderer Andro
 7. Lihat teks per halaman, seleksi/salin, bagikan teks dan ekspor TXT UTF-8; tutup dan buka ulang aplikasi. Hasil panjang diarahkan ke TXT. Ekspor tidak boleh menimpa PDF sumber.
 8. Rename PDF setelah OCR dan pemindahan folder. Folder dan teks harus tetap terkait ke nama baru; buka/export PDF byte tetap sama. Hapus PDF menghapus hasil teks dan keanggotaannya.
 9. Periksa font besar/TalkBack, dialog keyboard, picker ekspor, landscape, dan tombol footer teks yang tetap dapat dijangkau. Tes lokal menguji operasi create/rename folder via ViewModel karena idling input dialog Robolectric tidak stabil; keyboard/dialog wajib dibuktikan di HP.
-10. Uji APK penerbit Scanly-1.8.0.apk yang optimized, bukan hanya debug. Jalankan tes native dengan ./gradlew connectedDebugAndroidTest untuk PdfRenderer dan OCR model Latin asli. Catat model/Android/Play services, ukuran page OS bila tersedia, tanggal dan hasil.
+10. Uji APK penerbit Scanly-1.9.0.apk yang optimized, bukan hanya debug. Jalankan tes native dengan ./gradlew connectedDebugAndroidTest untuk PdfRenderer dan OCR model Latin asli. Catat model/Android/Play services, ukuran page OS bila tersedia, tanggal dan hasil.
 
 ## Alat gambar/PDF dan TTD 1.7
 
@@ -38,11 +38,20 @@ Paket instrumentasi memeriksa save/rename/export/delete dengan PdfRenderer Andro
 - Pastikan cache sesi dibersihkan setelah keluar normal, TTD tidak menjadi template permanen, dan output hasil tidak mewarisi indeks OCR yang tidak lagi cocok. Uji ulang OCR pada PDF hasil bila dibutuhkan.
 - APK instrumentasi menambah roundtrip native gambar→PDF→TTD→PNG dengan pemeriksaan pixel serta sumber utuh. Tes ini dikompilasi, harus dijalankan di HP.
 
-## Layout dan navigasi 1.8.0
+## Layout dan navigasi 1.9.0
 
 - Beranda: empat tombol 2×2 dan tiga PDF terbaru. Ketuk PDF untuk membuka viewer; menu tiga titik tetap menyediakan bagikan/ekspor/OCR/pindah/rename/hapus.
 - PDF ke JPG/PNG dan Sematkan tanda tangan: pemilih PDF wajib tampil, nama dapat dicari dengan keyboard, pilih dokumen yang benar. Tutup/pulihkan Activity saat pemilih terbuka. Jika belum ada PDF valid, tawaran scan tidak boleh membuka alat dengan input null.
-- Folder: tab terpisah, kartu bergambar folder/nama/jumlah, buat/rename/hapus. Buka kartu, scan ke folder, pindahkan PDF, dan periksa hitungan. Hapus folder mempertahankan PDF/OCR di Tanpa folder.
-- Dokumen: seluruh library tetap muncul setelah membuka/mencari dalam folder. Pencarian folder dan Dokumen tidak saling mengganti; Kembali dari isi folder membuka grid dan membersihkan query folder yang ditinggalkan.
-- Rotasi saat isi folder dibuka: lokasi tetap terpilih; jika folder dihapus, kembali ke grid. Pull-to-refresh bekerja pada Beranda, Dokumen dan Folder.
+- Folder: tab terpisah, daftar berikon kecil/nama/jumlah, buat/rename/hapus. Buka baris folder, scan ke folder, pindahkan PDF, dan periksa hitungan. Hapus folder mempertahankan PDF/OCR di Tanpa folder.
+- Dokumen: seluruh library tetap muncul setelah membuka/mencari dalam folder. Pencarian folder dan Dokumen tidak saling mengganti; Kembali dari isi folder membuka daftar dan membersihkan query folder yang ditinggalkan.
+- Rotasi saat isi folder dibuka: lokasi tetap terpilih; jika folder dihapus, kembali ke daftar. Pull-to-refresh bekerja pada Beranda, Dokumen dan Folder.
 - Uji portrait 320 dp, landscape, font 150–200%, keyboard, TalkBack, label menu dan target sentuh. Screenshot Robolectric layar kecil/font 150% bukan bukti TalkBack/keyboard HP.
+
+## Warna dan ikon 1.9.0
+
+- Pasang sebagai pembaruan dari 1.7.1/1.8.0 tanpa uninstall. Pastikan folder lama tampil sebagai daftar dengan warna/ikon bawaan, dan PDF/OCR tetap terbaca.
+- Buat folder dengan bawaan; edit dari menu Warna dan ikon. Pilih warna, ikon dan nama lalu simpan; tutup/buka aplikasi dan periksa pilihan yang sama.
+- Uji HEX sendiri, nilai tidak valid, warna sangat terang/gelap, nama duplikat dan reset ke bawaan. Pilihan ikon harus tetap bisa disimpan tanpa mengganti warna, dan sebaliknya.
+- Rotasi saat mengubah nama/warna/ikon, keyboard pada HEX, TalkBack/centang pilihan, font besar dan layar kecil. Pastikan Simpan tidak terhalang notifikasi atau keyboard.
+- Lihat warna/ikon di daftar dan pemilih pindah folder; pindahkan/hapus folder dan pastikan PDF/OCR tetap utuh.
+- Periksa empat warna alat Beranda pada tema terang/gelap serta akses semua alat.

@@ -26,24 +26,6 @@ import com.scanly.app.data.Document
 import com.scanly.app.data.DocumentFolder
 
 @Composable
-internal fun FolderNameDialog(title: String,initial: String,folders: List<DocumentFolder>,editingId: String?,
-                              onDismiss: ()->Unit,onSave: (String)->Unit) {
-    var name by remember(initial,editingId) { mutableStateOf(initial) }
-    val normalized=name.trim()
-    val error=when {
-        normalized.isBlank() -> "Isi nama folder."
-        normalized.length>60 || normalized.any { it.isISOControl() || it=='/' || it=='\\' } -> "Maksimal 60 karakter, tanpa garis miring atau karakter kontrol."
-        folders.any { it.id!=editingId && it.name.equals(normalized,ignoreCase=true) } -> "Nama folder sudah dipakai."
-        else -> null
-    }
-    AlertDialog(onDismissRequest=onDismiss,title={ Text(title) },text={
-        OutlinedTextField(value=name,onValueChange={ name=it },label={ Text("Nama folder") },singleLine=true,
-            modifier=Modifier.fillMaxWidth(),isError=error!=null,supportingText={ Text(error ?: "PDF tetap disimpan di perangkat.") })
-    },confirmButton={ TextButton(enabled=error==null,onClick={ onSave(normalized) }) { Text("Simpan folder") } },
-        dismissButton={ TextButton(onClick=onDismiss) { Text("Batal") } })
-}
-
-@Composable
 internal fun MoveFolderDialog(document: Document,folders: List<DocumentFolder>,onDismiss: ()->Unit,onMove: (String?)->Unit) {
     AlertDialog(onDismissRequest=onDismiss,title={ Text("Pindahkan ke folder") },text={
         Column(Modifier.fillMaxWidth().heightIn(max=360.dp).verticalScroll(rememberScrollState())) {
@@ -52,9 +34,10 @@ internal fun MoveFolderDialog(document: Document,folders: List<DocumentFolder>,o
                 Text("Tanpa folder",Modifier.weight(1f));if(document.folderId==null) Icon(Icons.Outlined.Check,"Folder saat ini")
             }
             folders.forEach { folder -> TextButton(onClick={ onMove(folder.id) },modifier=Modifier.fillMaxWidth().semantics { contentDescription="Pilih folder ${folder.name}" }) {
+                FolderSymbol(folder, Modifier.size(28.dp)); Spacer(Modifier.width(12.dp))
                 Text(folder.name,Modifier.weight(1f));if(document.folderId==folder.id) Icon(Icons.Outlined.Check,"Folder saat ini")
             } }
-            if(folders.isEmpty()) Text("Buat folder baru di tab Dokumen.",style=MaterialTheme.typography.bodySmall)
+            if(folders.isEmpty()) Text("Buat folder baru di tab Folder.",style=MaterialTheme.typography.bodySmall)
         }
     },confirmButton={ TextButton(onClick=onDismiss) { Text("Tutup") } })
 }

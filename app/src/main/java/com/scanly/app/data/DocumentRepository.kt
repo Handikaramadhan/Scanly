@@ -71,7 +71,11 @@ class DocumentRepository(private val context: Context) {
         synchronized(catalog.lock) { store.delete(document.file);catalog.remove(document.id);Unit }
     }
     suspend fun folders() = withContext(Dispatchers.IO) { catalog.folders() }
-    suspend fun createFolder(name: String) = withContext(Dispatchers.IO) { catalog.createFolder(name) }
+    suspend fun createFolder(name: String, color: String = FolderAppearance.DEFAULT_COLOR,
+                             icon: String = FolderAppearance.DEFAULT_ICON) = withContext(Dispatchers.IO) { catalog.createFolder(name, color, icon) }
+    suspend fun updateFolder(id: String, name: String, color: String, icon: String) = withContext(Dispatchers.IO) {
+        catalog.updateFolder(id, name, color, icon)
+    }
     suspend fun renameFolder(id: String,name: String) = withContext(Dispatchers.IO) { catalog.renameFolder(id,name) }
     suspend fun deleteFolder(id: String) = withContext(Dispatchers.IO) { catalog.deleteFolder(id) }
     suspend fun move(document: Document,folderId: String?) = withContext(Dispatchers.IO) {

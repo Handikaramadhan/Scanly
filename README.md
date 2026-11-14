@@ -1,14 +1,14 @@
-# Scanly 1.8.0
+# Scanly 1.9.0
 
 Pemindai dokumen Android gratis dengan kode aplikasi open source (Apache-2.0), tanpa akun, iklan, langganan atau watermark. Kamera, deteksi tepi, crop, filter dan editor kembali memakai **Google ML Kit Document Scanner**, dengan konfigurasi scanner penuh seperti versi awal. Komponen scanner Google sendiri tidak open source.
 
 ## Unduh dan pasang
 
-Source resmi: [Handikaramadhan/Scanly](https://github.com/Handikaramadhan/Scanly). APK dibagikan melalui **[GitHub Releases](https://github.com/Handikaramadhan/Scanly/releases)**. Versi 1.8.0 membawa layout baru berdasarkan wireframe pemilik: empat alat di Beranda, Dokumen terpisah dari Folder, dan kartu folder yang dapat dibuka.
+Source resmi: [Handikaramadhan/Scanly](https://github.com/Handikaramadhan/Scanly). APK dibagikan melalui **[GitHub Releases](https://github.com/Handikaramadhan/Scanly/releases)**. Versi 1.9.0 memberi warna berbeda pada alat Beranda dan menampilkan Folder sebagai daftar ringkas dengan warna serta ikon yang dapat dipilih sendiri.
 
-APK versi ini adalah **Scanly-1.8.0.apk**, menggunakan package dan kunci penerbit yang sama dengan 1.7.1. Instal sebagai pembaruan tanpa uninstall; tidak ada migrasi lokasi PDF atau katalog. Cocokkan checksum rilis. Android minimum 6.0; scanner memerlukan Google Play services kompatibel.
+APK versi ini adalah **Scanly-1.9.0.apk**, menggunakan package dan kunci penerbit yang sama dengan 1.7.1/1.8.0. Instal sebagai pembaruan tanpa uninstall. Katalog otomatis menambah kolom warna/ikon; lokasi dan isi PDF tetap sama. Cocokkan checksum rilis. Android minimum 6.0; scanner memerlukan Google Play services kompatibel.
 
-Pengguna APK uji 1.7.0/sebelumnya perlu ekspor PDF/TXT sebelum mengganti instalasi karena kunci APK uji berbeda. Uninstall menghapus data internal, folder dan indeks OCR. Jangan uninstall 1.7.1 untuk memperbarui ke 1.8.0.
+Pengguna APK uji 1.7.0/sebelumnya perlu ekspor PDF/TXT sebelum mengganti instalasi karena kunci APK uji berbeda. Uninstall menghapus data internal, folder dan indeks OCR. Jangan uninstall APK penerbit 1.7.1/1.8.0 untuk memperbarui ke 1.9.0.
 
 Panduan signing dan publikasi: [GitHub Releases](docs/GITHUB_RELEASE.md). Artifact debug Actions bukan jalur pembaruan pengguna.
 
@@ -34,11 +34,11 @@ Semua proses alat berjalan lokal. Input/TTD sesi disimpan sementara di cache pri
 
 ## Folder dan OCR
 
-Tab **Dokumen** menampilkan semua PDF beserta pencarian/urut; tidak lagi memiliki chip/filter folder. Buka tab **Folder** untuk melihat kartu berbentuk folder, nama, dan jumlah dokumen. Ketuk **Buat folder**, lalu buka kartu untuk melihat isi. Menu tiga titik pada kartu atau halaman folder menyediakan rename/hapus. **Tanpa folder** mengumpulkan PDF yang belum dikelompokkan.
+Tab **Dokumen** menampilkan semua PDF beserta pencarian/urut; tidak lagi memiliki chip/filter folder. Buka tab **Folder** untuk melihat daftar folder berikon kecil, nama, dan jumlah dokumen. Ketuk **Buat folder**, pilih nama, warna, dan ikon, lalu simpan. Ketuk baris folder untuk melihat isinya. Menu tiga titik pada baris atau halaman folder menyediakan rename, **Warna dan ikon**, serta hapus. **Tanpa folder** mengumpulkan PDF yang belum dikelompokkan.
 
 Menu **Pindahkan ke folder** pada PDF mengatur keanggotaannya. Menghapus folder mengembalikan isinya ke **Tanpa folder** tanpa menghapus PDF/OCR. Scan dari halaman isi folder otomatis diarahkan ke folder tersebut; scan dari Beranda/Dokumen tidak. Kembali dari isi folder membuka daftar folder. Pencarian di Dokumen dan isi folder disimpan terpisah.
 
-Folder ditampilkan sebagai objek visual yang dapat dibuka. Pengelompokan masih dicatat di katalog lokal; tidak ada pemindahan atau penggantian lokasi PDF lama.
+Tersedia delapan warna pilihan, warna sendiri lewat kode HEX #RRGGBB, dan sepuluh ikon. Jika tidak diubah, folder memakai warna biru dan ikon folder bawaan; tombol **Gunakan tampilan bawaan** mengembalikan keduanya. Warna/ikon disimpan lokal per folder. **Tanpa folder** adalah kategori sistem dengan tampilan bawaan. Katalog versi 2 mempertahankan folder lama, PDF, OCR dan jurnal rename saat menambah pengaturan tampilan.
 
 Menu **Baca teks (OCR)** memproses PDF yang sudah tersimpan, satu halaman setiap kali. Model Latin untuk dokumen Indonesia/Inggris disertakan di APK dan berjalan lokal. Hasil tampil per halaman, dapat diseleksi/disalin, dibagikan sebagai teks atau diekspor sebagai TXT. Pencarian **nama atau isi dokumen** mencakup hasil OCR yang sudah selesai dan mengikuti folder terpilih. Periksa hasil karena OCR bisa keliru.
 
@@ -60,7 +60,7 @@ Tarik ke bawah dari bagian atas Beranda/Dokumen untuk memuat ulang. Pencarian na
 
 ## Membangun dari source
 
-APK distribusi 1.8.0 adalah `artifacts/Scanly-1.8.0.apk`: optimized, tidak debuggable, dan memakai kunci penerbit khusus. APK debug untuk diagnosis; APK/AAB unsigned perlu ditandatangani sebelum distribusi. Kunci privat tidak disertakan dalam source.
+APK distribusi 1.9.0 adalah `artifacts/Scanly-1.9.0.apk`: optimized, tidak debuggable, dan memakai kunci penerbit khusus. APK debug untuk diagnosis; APK/AAB unsigned perlu ditandatangani sebelum distribusi. Kunci privat tidak disertakan dalam source.
 
 Build: JDK 21, Android SDK 36, Build Tools 35.0.0, Python 3, minSdk 23. Build pertama memerlukan internet untuk dependency. Siapkan local.properties untuk SDK lokal.
 

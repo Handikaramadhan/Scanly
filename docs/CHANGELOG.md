@@ -1,3 +1,13 @@
+# 1.9.0
+
+- Empat alat Beranda memakai warna berbeda yang mengikuti tema terang/gelap.
+- Folder menjadi daftar satu kolom dengan ikon kecil, nama, jumlah dokumen dan menu opsi; ilustrasi thumbnail/grid dihapus.
+- Editor folder untuk nama, delapan warna pilihan, kode warna HEX sendiri dan sepuluh ikon; warna/ikon bawaan tersedia tanpa konfigurasi.
+- Menu Warna dan ikon serta tombol Gunakan tampilan bawaan; pilihan disimpan per folder dan terlihat juga saat memindahkan PDF.
+- Katalog SQLite 1→2 menambah kolom warna/ikon tanpa memindahkan PDF atau menghapus folder, OCR dan jurnal rename. Folder lama otomatis memakai bawaan.
+- Draft editor dipulihkan saat Activity dibuat ulang; notifikasi ditempatkan di atas tombol Simpan.
+- versionCode 13, package dan kunci penerbit dipertahankan untuk pembaruan dari 1.7.1/1.8.0.
+
 # 1.8.0
 
 - Layout Beranda mengikuti wireframe pemilik: slogan, empat tombol alat dalam grid 2×2, pemisah dan tiga dokumen terbaru.

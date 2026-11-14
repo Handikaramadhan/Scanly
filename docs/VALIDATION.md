@@ -1,25 +1,25 @@
-# Validasi Scanly 1.8.0
+# Validasi Scanly 1.9.0
 
-Tanggal: 14 November 2026. versionCode 12. Perubahan: layout Beranda/Dokumen berdasarkan wireframe pemilik, tab Folder tersendiri dengan kartu folder, dan halaman pemilih PDF untuk alat di Beranda. Mesin scanner Google, OCR, konversi dan TTD dipertahankan; lokasi PDF/katalog dan kunci penerbit sama dengan 1.7.1.
+Tanggal: 14 November 2026. versionCode 13. Perubahan: warna fitur Beranda, Folder berupa daftar satu kolom, editor warna HEX/ikon dengan nilai bawaan, dan migrasi katalog 1→2. Lokasi PDF dan identitas signing tetap sama dengan 1.7.1/1.8.0.
 
 ## Hasil lokal
 
-**66 tes lulus, 0 gagal/error, 0 dilewati.** Lint debug/release: **0 error, 15 warning**, berupa versi dependency/build tools dan saran KTX. Inventaris runtime tetap 138 module; EXIF langsung dipatok ke 1.4.1. Native PDF/OCR/konversi test APK dikompilasi, belum dijalankan di HP.
+**74 tes lulus, 0 gagal/error, 0 dilewati.** Lint debug/release: **0 error, 16 warning**, berupa versi dependency/build tools dan saran KTX. Inventaris runtime tetap 138 module; EXIF langsung dipatok ke 1.4.1. Native PDF/OCR/konversi test APK dikompilasi, belum dijalankan di HP.
 
 | Suite | Tes |
 | --- | ---: |
 | PdfStoreTest | 16 |
 | DocumentRepositoryTest | 4 |
-| DocumentCatalogTest | 8 |
+| DocumentCatalogTest | 12 |
 | PdfOcrEngineTest | 4 |
 | ScannerLauncherTest | 6 |
-| ScanlyFlowTest | 11 |
-| LibraryFlowTest | 4 |
+| ScanlyFlowTest | 13 |
+| LibraryFlowTest | 6 |
 | DocumentToolsTest | 8 |
 | DocumentToolsModelTest | 3 |
 | DocumentToolsUiTest | 2 |
 
-Tes tambahan 1.8 memeriksa pemilihan PDF untuk dua mode alat, library kosong, isolasi filter/pencarian folder dari Dokumen, tombol Kembali, pemulihan Activity produksi, serta layar 320 dp/font 150%. Screenshot memakai view produksi dengan data PDF sintetis. Tes UI menggunakan halaman pemilih penuh; input dialog rename/create tetap mengikuti batas simulator yang sudah dicatat.
+Tes tambahan 1.8 memeriksa pemilihan PDF untuk dua mode alat, library kosong, isolasi filter/pencarian folder dari Dokumen, tombol Kembali, pemulihan Activity produksi, serta layar 320 dp/font 150%. Screenshot memakai view produksi dengan data PDF sintetis. Tes UI menggunakan halaman pemilih penuh; dialog rename PDF tetap mengikuti batas simulator yang sudah dicatat.
 
 Tes pipeline alat memeriksa orientasi EXIF, gambar→PDF dengan urutan/rasio dan pixel warna, output PNG halaman terpilih, ZIP JPEG bernama urut, penutupan renderer/bitmap saat cancel, posisi/bounds TTD, hanya halaman target berubah, ukuran halaman sumber, tinta biru/latar berbayang ringan, PNG transparan, penolakan foto kosong, coretan/undo/clear/apply, koordinat preview Fit, pemulihan urutan sesi, commit idempoten dan antrean hasil galeri saat init. Routing Activity internal dan pembatalan juga diuji.
 
@@ -39,7 +39,7 @@ Robolectric memakai PDFBox khusus tes sebagai parser/shadow pada batas PdfRender
 
 Tes perangkat menambahkan roundtrip gambar→PDF→TTD→PNG menggunakan PdfRenderer Android dan pemeriksaan pixel serta sumber utuh. Bersama roundtrip repository PDF dan OCR Latin native, total tiga tes perangkat dikompilasi. ADB terbaru melaporkan tidak ada perangkat terhubung. Kamera Google, akurasi OCR, picker/renderer perangkat dan hasil tanda tangan di HP tetap perlu diuji melalui DEVICE_TESTS.md; tidak ada klaim eksekusi perangkat atau akurasi latar universal.
 
-Input dialog nama folder tetap diuji via operasi ViewModel/katalog karena kendala idling Robolectric sebelumnya; form/keyboard masuk checklist HP.
+Editor folder kini halaman penuh: pemilihan warna/ikon, HEX valid/invalid, simpan, reset dan pemulihan draft diuji lewat Compose. Keyboard fisik/IME dan TalkBack tetap perlu HP. Dialog rename PDF masih memiliki batas idling simulator yang sudah dicatat.
 
 ## Reproduksi dan paket
 
@@ -53,14 +53,22 @@ python3 scripts/package_source.py
 python3 scripts/write_checksums.py
 ```
 
-Identitas tetap com.scanly.app. APK distribusi Scanly-1.8.0.apk memakai kunci penerbit RSA-4096 yang berbeda dari APK uji; tidak debuggable dan fingerprint cocok dengan docs/release-certificate.sha256. APK/AAB unsigned tetap tersedia untuk build/signing terpisah. APK penerbit 1.7.1 memakai kunci yang sama sehingga pembaruan ini tidak memerlukan uninstall. APK uji 1.7.0/sebelumnya memakai kunci berbeda dan perlu ekspor sebelum penggantian instalasi. Model OCR Latin, aset lisensi/privasi, izin, ZIP dan alignment diperiksa: ELF64 minimal 16 KB, ELF32 minimal 4 KB, zipalign -P 16; ini pemeriksaan binary, bukan runtime HP 16 KB.
+Identitas tetap com.scanly.app. APK distribusi Scanly-1.9.0.apk memakai kunci penerbit RSA-4096 yang berbeda dari APK uji; tidak debuggable dan fingerprint cocok dengan docs/release-certificate.sha256. APK/AAB unsigned tetap tersedia untuk build/signing terpisah. APK penerbit 1.7.1 memakai kunci yang sama sehingga pembaruan ini tidak memerlukan uninstall. APK uji 1.7.0/sebelumnya memakai kunci berbeda dan perlu ekspor sebelum penggantian instalasi. Model OCR Latin, aset lisensi/privasi, izin, ZIP dan alignment diperiksa: ELF64 minimal 16 KB, ELF32 minimal 4 KB, zipalign -P 16; ini pemeriksaan binary, bukan runtime HP 16 KB.
 
 Tidak ada izin kamera/mikrofon/penyimpanan luas baru; alat memakai pemilih foto/berkas Android dan Activity alat tidak exported. Detail binary, hash dan sertifikat ada di artifacts/validation-summary.json dan SHA256SUMS.txt. Persiapan publikasi/identitas penerbit mengikuti RELEASE_CHECKLIST.md.
 
-## Pemeriksaan signing 1.8.0
+## Pemeriksaan signing 1.9.0
 
 Skrip sign_release.py mencocokkan hash APK unsigned dengan validation-summary.json sebelum signing, kemudian memverifikasi signature, fingerprint penerbit, package/version, flag debuggable dan zipalign. Laporan release-validation.json berisi hash APK akhir dan fingerprint publik; tidak berisi password atau lokasi kunci privat. Berkas privat tidak dimasukkan ke Git/source ZIP.
 
-Jalur signing tetap mematok sertifikat penerbit yang sama. Pemeriksaan hash/fingerprint menolak perbedaan sebelum mengganti output. Uji negatif jalur signing berasal dari persiapan 1.7.1; pada 1.8.0 pemeriksaan signature/fingerprint/versi/alignment dijalankan kembali pada APK hasil.
+Jalur signing tetap mematok sertifikat penerbit yang sama. Pemeriksaan hash/fingerprint menolak perbedaan sebelum mengganti output. Uji negatif jalur signing berasal dari persiapan 1.7.1; pada 1.9.0 pemeriksaan signature/fingerprint/versi/alignment dijalankan kembali pada APK hasil.
 
-Build optimized APK/AAB selesai sukses; pemeriksaan debug, seluruh 66 tes, lint debug/release serta APK instrumentasi juga selesai sukses pada source final. Tidak ada tes yang dilewati. Signing dan checksum diverifikasi terpisah pada paket akhir.
+Build optimized APK/AAB selesai sukses; pemeriksaan debug, seluruh 74 tes, lint debug/release serta APK instrumentasi juga selesai sukses pada source final. Tidak ada tes yang dilewati. Signing dan checksum diverifikasi terpisah pada paket akhir.
+
+## Katalog dan tampilan 1.9
+
+Tes migrasi membuat schema SQLite versi 1 yang sama dengan aplikasi lama, lengkap folder, relasi PDF, OCR dan jurnal rename terputus. Pembukaan versi 2 memberi warna/ikon bawaan, pemulihan rename mempertahankan OCR/relasi, byte/lokasi PDF sama dan foreign_key_check kosong. Tidak ada tabel yang dihapus.
+
+Tes tambahan mencakup persistensi warna/ikon setelah rename/reset, penolakan HEX/ikon/nama duplikat tanpa update parsial, fallback nilai tampilan tak dikenal, pilihan palet/ikon via UI, kode HEX sendiri, bawaan, draft setelah Activity dibuat ulang, dan tema gelap dengan folder putih. Label dan centang/outline menunjukkan pilihan selain warna. Notifikasi editor diposisikan di atas footer Simpan.
+
+Kontras teks delapan pasangan warna alat (empat terang, empat gelap) dihitung dari luminance sRGB; nilai minimum 6,62:1. Ikon folder custom memakai glyph hitam/putih berdasarkan luminance. Screenshot sintetis di UI_LAYOUT.md, bukan bukti render HP.

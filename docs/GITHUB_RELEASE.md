@@ -1,22 +1,22 @@
-# Rilis GitHub Scanly 1.8.0
+# Rilis GitHub Scanly 1.9.0
 
-Target distribusi saat ini GitHub; Play Store dikerjakan nanti. Rilis 1.7.1 sudah memakai kunci penerbit khusus; 1.8.0 melanjutkan identitas pembaruan yang sama. Rilis berikutnya menggunakan tag **v1.8.0**, judul **Scanly 1.8.0**, dan status rilis biasa sesuai keputusan pemilik.
+Target distribusi saat ini GitHub; Play Store dikerjakan nanti. Rilis 1.7.1 sudah memakai kunci penerbit khusus; 1.9.0 melanjutkan identitas pembaruan yang sama. Rilis berikutnya menggunakan tag **v1.9.0**, judul **Scanly 1.9.0**, dan status rilis biasa sesuai keputusan pemilik.
 
 ## Paket distribusi
 
-- `artifacts/Scanly-1.8.0.apk`: APK optimized, tidak debuggable, kunci penerbit khusus.
-- `artifacts/Scanly-1.8.0-source.zip`: source publik tanpa SDK/cache/key.
+- `artifacts/Scanly-1.9.0.apk`: APK optimized, tidak debuggable, kunci penerbit khusus.
+- `artifacts/Scanly-1.9.0-source.zip`: source publik tanpa SDK/cache/key.
 - `artifacts/SHA256SUMS.txt`: checksum APK dan berkas pendamping.
 - `artifacts/release-validation.json`: identitas versi, checksum, sertifikat penerbit dan batas pengujian.
 - `artifacts/validation-summary.json`: hasil tes/lint/pemeriksaan binary.
 
-Buka https://github.com/Handikaramadhan/Scanly/releases/new, pilih main dan tag v1.8.0. Salin docs/RELEASE_NOTES.md, lampirkan berkas di atas, lalu Publish release. Jangan centang Pre-release untuk jalur rilis biasa ini. Jangan mengganti APK pada tag 1.7.0-rc1: identitas kunci berubah dan harus dijelaskan sebagai rilis baru.
+Buka https://github.com/Handikaramadhan/Scanly/releases/new, pilih main dan tag v1.9.0. Salin docs/RELEASE_NOTES.md, lampirkan berkas di atas, lalu Publish release. Jangan centang Pre-release untuk jalur rilis biasa ini. Jangan mengganti APK pada tag 1.7.0-rc1: identitas kunci berubah dan harus dijelaskan sebagai rilis baru.
 
 Source sudah dapat di-push melalui SSH. Pembuatan Release dan pengunggahan asset memerlukan login web atau token API yang memiliki izin menulis release; SSH Git saja tidak menyediakan operasi tersebut. Tidak ada credential API penerbit yang ditanam dalam workflow.
 
 ## Kunci pembaruan
 
-Kunci penerbit RSA-4096 dibuat khusus Scanly. Fingerprint publik dipatok di [release-certificate.sha256](release-certificate.sha256); skrip signing menolak kunci debug atau kunci penerbit yang tidak cocok. Kunci dan password privat berada di luar repository, dengan direktori 0700 dan file 0600. Pemilik perlu menyimpan backup privat keystore dan password secara terpisah; kehilangan kunci menghalangi update dengan identitas yang sama. Jangan unggah key/password ke GitHub, issue, artifact atau log.
+Kunci penerbit RSA-4096 yang sudah digunakan sejak 1.7.1 tetap dipakai. Fingerprint publik dipatok di [release-certificate.sha256](release-certificate.sha256); skrip signing menolak kunci debug atau kunci penerbit yang tidak cocok. Kunci dan password privat berada di luar repository, dengan direktori 0700 dan file 0600. Pemilik perlu menyimpan backup privat keystore dan password secara terpisah; kehilangan kunci menghalangi update dengan identitas yang sama. Jangan unggah key/password ke GitHub, issue, artifact atau log.
 
 Sebelum pindah dari APK uji, ekspor PDF/TXT dan periksa salinannya, baru uninstall lalu instal APK rilis. Uninstall menghapus data internal. Metadata folder/OCR tidak ikut ekspor PDF; belum ada restore library/impor PDF dalam aplikasi. Jangan menjanjikan update langsung dari APK uji.
 

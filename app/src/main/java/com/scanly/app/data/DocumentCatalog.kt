@@ -10,7 +10,9 @@ import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-data class DocumentFolder(val id: String,val name: String)
+data class DocumentFolder(val id: String, val name: String,
+                          val color: String = FolderAppearance.DEFAULT_COLOR,
+                          val icon: String = FolderAppearance.DEFAULT_ICON)
 data class OcrText(val pages: List<String>,val completedAt: Long) {
     val text: String by lazy(LazyThreadSafetyMode.NONE) { pages.joinToString("\n\n") }
 }
@@ -19,16 +21,21 @@ internal data class CatalogEntry(val folderId: String?,val ocrPages: Int?,val oc
 /** PDFs stay in their original directory. SQLite holds only organisation and derived text. */
 internal class DocumentCatalog(private val context: Context) {
     val lock: Any=locks.getOrPut(context.getDatabasePath("catalog.db").absolutePath) { Any() }
-    private class Database(context: Context): SQLiteOpenHelper(context,"catalog.db",null,1) {
+    private class Database(context: Context): SQLiteOpenHelper(context,"catalog.db",null,2) {
         override fun onConfigure(db: SQLiteDatabase) { db.setForeignKeyConstraintsEnabled(true) }
         override fun onCreate(db: SQLiteDatabase) {
-            db.execSQL("CREATE TABLE folders(id TEXT PRIMARY KEY,name TEXT NOT NULL,name_key TEXT NOT NULL UNIQUE)")
+            db.execSQL("CREATE TABLE folders(id TEXT PRIMARY KEY,name TEXT NOT NULL,name_key TEXT NOT NULL UNIQUE,color TEXT NOT NULL DEFAULT '#275DCE',icon TEXT NOT NULL DEFAULT 'folder')")
             db.execSQL("CREATE TABLE documents(file_name TEXT PRIMARY KEY,folder_id TEXT REFERENCES folders(id) ON DELETE SET NULL,size INTEGER NOT NULL,modified INTEGER NOT NULL,ocr_pages INTEGER,ocr_at INTEGER)")
             db.execSQL("CREATE INDEX document_folder ON documents(folder_id)")
             db.execSQL("CREATE TABLE ocr_pages(file_name TEXT NOT NULL REFERENCES documents(file_name) ON UPDATE CASCADE ON DELETE CASCADE,page_index INTEGER NOT NULL,text TEXT NOT NULL,search_text TEXT NOT NULL,PRIMARY KEY(file_name,page_index))")
             db.execSQL("CREATE TABLE pending_rename(old_name TEXT PRIMARY KEY,new_name TEXT NOT NULL UNIQUE)")
         }
-        override fun onUpgrade(db: SQLiteDatabase,old: Int,new: Int) { throw IOException("Versi katalog belum didukung.") }
+        override fun onUpgrade(db: SQLiteDatabase, old: Int, new: Int) {
+            if (old == 1 && new == 2) {
+                db.execSQL("ALTER TABLE folders ADD COLUMN color TEXT NOT NULL DEFAULT '#275DCE'")
+                db.execSQL("ALTER TABLE folders ADD COLUMN icon TEXT NOT NULL DEFAULT 'folder'")
+            } else throw IOException("Versi katalog belum didukung.")
+        }
     }
     private fun <T> database(action: (SQLiteDatabase)->T): T = synchronized(lock) {
         Database(context).use { action(it.writableDatabase) }
@@ -72,18 +79,33 @@ internal class DocumentCatalog(private val context: Context) {
     } }
     fun folders(): List<DocumentFolder> = database { db ->
         val result=mutableListOf<DocumentFolder>()
-        db.rawQuery("SELECT id,name FROM folders ORDER BY name_key,id",null).use { c -> while(c.moveToNext()) result.add(DocumentFolder(c.getString(0),c.getString(1))) };result
+        db.rawQuery("SELECT id,name,color,icon FROM folders ORDER BY name_key,id",null).use { c -> while(c.moveToNext()) result.add(DocumentFolder(c.getString(0), c.getString(1),
+            runCatching { FolderAppearance.color(c.getString(2)) }.getOrDefault(FolderAppearance.DEFAULT_COLOR),
+            c.getString(3).takeIf { stored -> FolderIconKey.entries.any { it.id == stored } } ?: FolderAppearance.DEFAULT_ICON)) };result
     }
-    fun createFolder(name: String): DocumentFolder = database { db ->
+    fun createFolder(name: String, color: String = FolderAppearance.DEFAULT_COLOR,
+                     icon: String = FolderAppearance.DEFAULT_ICON): DocumentFolder = database { db ->
         val cleaned=folderName(name)
         require(!folderExists(db,cleaned)) { "Nama folder sudah dipakai." }
-        val folder=DocumentFolder(UUID.randomUUID().toString(),cleaned)
-        db.insertOrThrow("folders",null,ContentValues().apply { put("id",folder.id);put("name",cleaned);put("name_key",cleaned.lowercase(Locale.ROOT)) });folder
+        val folder=DocumentFolder(UUID.randomUUID().toString(), cleaned, FolderAppearance.color(color), FolderAppearance.icon(icon))
+        db.insertOrThrow("folders",null,ContentValues().apply { put("id",folder.id);put("name",cleaned);put("name_key",cleaned.lowercase(Locale.ROOT));put("color",folder.color);put("icon",folder.icon) });folder
     }
     fun renameFolder(id: String,name: String) = database { db ->
         val cleaned=folderName(name)
         db.rawQuery("SELECT id FROM folders WHERE name_key=? AND id!=?",arrayOf(cleaned.lowercase(Locale.ROOT),id)).use { require(!it.moveToFirst()) { "Nama folder sudah dipakai." } }
         require(db.update("folders",ContentValues().apply { put("name",cleaned);put("name_key",cleaned.lowercase(Locale.ROOT)) },"id=?",arrayOf(id))==1) { "Folder tidak tersedia." }
+    }
+    fun updateFolder(id: String, name: String, color: String, icon: String) = database { db ->
+        val cleaned = folderName(name)
+        val normalizedColor = FolderAppearance.color(color)
+        val normalizedIcon = FolderAppearance.icon(icon)
+        db.rawQuery("SELECT id FROM folders WHERE name_key=? AND id!=?", arrayOf(cleaned.lowercase(Locale.ROOT), id)).use {
+            require(!it.moveToFirst()) { "Nama folder sudah dipakai." }
+        }
+        require(db.update("folders", ContentValues().apply {
+            put("name", cleaned); put("name_key", cleaned.lowercase(Locale.ROOT))
+            put("color", normalizedColor); put("icon", normalizedIcon)
+        }, "id=?", arrayOf(id)) == 1) { "Folder tidak tersedia." }
     }
     fun deleteFolder(id: String) = database { db -> db.delete("folders","id=?",arrayOf(id));Unit }
     fun move(fileName: String,folderId: String?) = database { db ->
